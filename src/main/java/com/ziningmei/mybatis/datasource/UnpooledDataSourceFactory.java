@@ -24,6 +24,6 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
 
     @Override
     public DataSource getDataSource() {
-        return null;
+        return dataSource;
     }
 }

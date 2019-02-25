@@ -39,7 +39,7 @@ public class MapperRegistry {
             boolean loadCompleted = false;
             try {
                 //添加到knownMappers
-                knownMappers.put(type, new MapperProxyFactory<T>(type));
+                knownMappers.put(type, new MapperProxyFactory<>(type));
                 // It's important that the type is added before the parser is run
                 // otherwise the binding may automatically be attempted by the
                 // mapper parser. If the type is already known, it won't try.

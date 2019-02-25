@@ -1,6 +1,5 @@
-package com.ziningmei.mybatis.parse;
+package com.ziningmei.mybatis.parsing;
 
-import com.sun.corba.se.spi.orb.PropertyParser;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

@@ -4,8 +4,8 @@ import com.ziningmei.mybatis.builder.BaseBuilder;
 import com.ziningmei.mybatis.builder.BuilderException;
 import com.ziningmei.mybatis.datasource.DataSourceFactory;
 import com.ziningmei.mybatis.io.Resources;
-import com.ziningmei.mybatis.parse.XNode;
-import com.ziningmei.mybatis.parse.XPathParser;
+import com.ziningmei.mybatis.parsing.XNode;
+import com.ziningmei.mybatis.parsing.XPathParser;
 import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.session.Environment;
 import com.ziningmei.mybatis.transaction.TransactionFactory;
@@ -65,6 +65,10 @@ public class XMLConfigBuilder extends BaseBuilder {
 
     }
 
+    /**
+     * 解析配置文件，获取Configuration
+     * @param root
+     */
     private void parseConfiguration(XNode root) {
         try {
             //环境解析
@@ -148,9 +152,15 @@ public class XMLConfigBuilder extends BaseBuilder {
         return false;
     }
 
+    /**
+     * 解析mapper
+     * @param parent
+     * @throws Exception
+     */
     private void mapperElement(XNode parent) throws Exception {
         //节点不为空
         if (parent != null) {
+            //循环遍历解析mapper
             for (XNode child : parent.getChildren()) {
                 //获取资源路径
                 String resource = child.getStringAttribute("resource");

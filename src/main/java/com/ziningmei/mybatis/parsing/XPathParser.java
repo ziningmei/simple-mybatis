@@ -1,4 +1,4 @@
-package com.ziningmei.mybatis.parse;
+package com.ziningmei.mybatis.parsing;
 
 import com.ziningmei.mybatis.builder.BuilderException;
 import org.w3c.dom.Document;
@@ -14,7 +14,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Properties;
 
 public class XPathParser {
 

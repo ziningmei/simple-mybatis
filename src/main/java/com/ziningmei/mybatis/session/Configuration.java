@@ -1,13 +1,13 @@
 package com.ziningmei.mybatis.session;
 
-import com.sun.beans.WeakCache;
 import com.ziningmei.mybatis.binding.MapperRegistry;
 import com.ziningmei.mybatis.builder.annotation.MethodResolver;
 import com.ziningmei.mybatis.datasource.UnpooledDataSourceFactory;
-import com.ziningmei.mybatis.parse.XNode;
+import com.ziningmei.mybatis.parsing.XNode;
+import com.ziningmei.mybatis.scripting.LanguageDriverRegistry;
+import com.ziningmei.mybatis.scripting.xml.XMLLanguageDriver;
 import com.ziningmei.mybatis.transaction.JdbcTransactionFactory;
 import com.ziningmei.mybatis.type.TypeAliasRegistry;
-import sun.misc.SoftCache;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +32,11 @@ public class Configuration {
     protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
     /**
+     * 初始化语言驱动注册
+     */
+    protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
+
+    /**
      * 已加载资源( Resource )集合
      */
     protected final Set<String> loadedResources = new HashSet<>();
@@ -41,7 +46,6 @@ public class Configuration {
      * mapper注册器
      */
     protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
-
 
 
     public Map<String, XNode> getSqlFragments() {
@@ -80,10 +84,13 @@ public class Configuration {
 
         //typeAliasRegistry.registerAlias("CGLIB", CglibProxyFactory.class);
         //typeAliasRegistry.registerAlias("JAVASSIST", JavassistProxyFactory.class);
+
+        languageRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
     }
 
     /**
      * 判断资源是否已经加载
+     *
      * @param resource
      * @return
      */
@@ -97,6 +104,7 @@ public class Configuration {
 
     /**
      * 判断mapper是否已经注册
+     *
      * @param boundType
      * @return
      */
@@ -104,12 +112,20 @@ public class Configuration {
         return mapperRegistry.hasMapper(boundType);
     }
 
-    public void addMapper(Class<?> boundType) {
+    public <T> void addMapper(Class<T> boundType) {
         mapperRegistry.addMapper(boundType);
     }
 
     public void addIncompleteMethod(MethodResolver methodResolver) {
 
+    }
+
+    public MapperRegistry getMapperRegistry() {
+        return mapperRegistry;
+    }
+
+    public LanguageDriverRegistry getLanguageRegistry() {
+        return languageRegistry;
     }
 
     protected static class StrictMap<V> extends HashMap<String, V> {

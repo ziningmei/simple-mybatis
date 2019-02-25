@@ -4,8 +4,8 @@ import com.ziningmei.mybatis.builder.BaseBuilder;
 import com.ziningmei.mybatis.builder.BuilderException;
 import com.ziningmei.mybatis.builder.MapperBuilderAssistant;
 import com.ziningmei.mybatis.io.Resources;
-import com.ziningmei.mybatis.parse.XNode;
-import com.ziningmei.mybatis.parse.XPathParser;
+import com.ziningmei.mybatis.parsing.XNode;
+import com.ziningmei.mybatis.parsing.XPathParser;
 import com.ziningmei.mybatis.session.Configuration;
 
 import java.io.InputStream;
@@ -54,6 +54,9 @@ public class XMLMapperBuilder extends BaseBuilder {
         this.builderAssistant.setCurrentNamespace(namespace);
     }
 
+    /**
+     * 解析mapper文件
+     */
     public void parse() {
 
         //是否已经解析
