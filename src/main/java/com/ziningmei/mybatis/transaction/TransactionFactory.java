@@ -1,5 +1,8 @@
 package com.ziningmei.mybatis.transaction;
 
+import com.ziningmei.mybatis.session.TransactionIsolationLevel;
+
+import javax.sql.DataSource;
 import java.util.Properties;
 
 /**
@@ -15,5 +18,12 @@ public interface TransactionFactory {
     void setProperties(Properties props);
 
 
-
+    /**
+     * 创建事务
+     * @param ds
+     * @param level
+     * @param autoCommit
+     * @return
+     */
+    Transaction newTransaction(DataSource ds, TransactionIsolationLevel level, boolean autoCommit);
 }

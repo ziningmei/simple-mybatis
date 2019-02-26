@@ -4,26 +4,27 @@ import com.ziningmei.mybatis.annotation.Delete;
 import com.ziningmei.mybatis.annotation.Insert;
 import com.ziningmei.mybatis.annotation.Select;
 import com.ziningmei.mybatis.annotation.Update;
-import com.ziningmei.mybatis.binding.BindingException;
 import com.ziningmei.mybatis.binding.MapperMethod;
 import com.ziningmei.mybatis.builder.BuilderException;
 import com.ziningmei.mybatis.builder.IncompleteElementException;
 import com.ziningmei.mybatis.builder.MapperBuilderAssistant;
 import com.ziningmei.mybatis.builder.xml.XMLMapperBuilder;
+import com.ziningmei.mybatis.cursor.Cursor;
+import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
+import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
 import com.ziningmei.mybatis.io.Resources;
-import com.ziningmei.mybatis.mapping.SqlSource;
+import com.ziningmei.mybatis.mapping.*;
+import com.ziningmei.mybatis.reflection.TypeParameterResolver;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.session.RowBounds;
 import sun.plugin2.main.server.ResultHandler;
 
-import javax.crypto.KeyGenerator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.*;
+import java.util.*;
 
 public class MapperAnnotationBuilder {
 
@@ -98,6 +99,7 @@ public class MapperAnnotationBuilder {
 
     /**
      * 解析语句
+     *
      * @param method
      */
     public void parseStatement(Method method) {
@@ -105,7 +107,6 @@ public class MapperAnnotationBuilder {
         LanguageDriver languageDriver = getLanguageDriver(method);
         SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
         if (sqlSource != null) {
-            Options options = method.getAnnotation(Options.class);
             final String mappedStatementId = type.getName() + "." + method.getName();
             Integer fetchSize = null;
             Integer timeout = null;
@@ -113,54 +114,14 @@ public class MapperAnnotationBuilder {
             ResultSetType resultSetType = ResultSetType.FORWARD_ONLY;
             SqlCommandType sqlCommandType = getSqlCommandType(method);
             boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
-            boolean flushCache = !isSelect;
 
-            KeyGenerator keyGenerator;
+            KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
             String keyProperty = null;
             String keyColumn = null;
-            if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
-                // first check for SelectKey annotation - that overrides everything else
-                SelectKey selectKey = method.getAnnotation(SelectKey.class);
-                if (selectKey != null) {
-                    keyGenerator = handleSelectKeyAnnotation(selectKey, mappedStatementId, getParameterType(method), languageDriver);
-                    keyProperty = selectKey.keyProperty();
-                } else if (options == null) {
-                    keyGenerator = configuration.isUseGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
-                } else {
-                    keyGenerator = options.useGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
-                    keyProperty = options.keyProperty();
-                    keyColumn = options.keyColumn();
-                }
-            } else {
-                keyGenerator = NoKeyGenerator.INSTANCE;
-            }
 
-            if (options != null) {
-                if (FlushCachePolicy.TRUE.equals(options.flushCache())) {
-                    flushCache = true;
-                } else if (FlushCachePolicy.FALSE.equals(options.flushCache())) {
-                    flushCache = false;
-                }
-                useCache = options.useCache();
-                fetchSize = options.fetchSize() > -1 || options.fetchSize() == Integer.MIN_VALUE ? options.fetchSize() : null; //issue #348
-                timeout = options.timeout() > -1 ? options.timeout() : null;
-                statementType = options.statementType();
-                resultSetType = options.resultSetType();
-            }
 
             String resultMapId = null;
-            ResultMap resultMapAnnotation = method.getAnnotation(ResultMap.class);
-            if (resultMapAnnotation != null) {
-                String[] resultMaps = resultMapAnnotation.value();
-                StringBuilder sb = new StringBuilder();
-                for (String resultMap : resultMaps) {
-                    if (sb.length() > 0) {
-                        sb.append(",");
-                    }
-                    sb.append(resultMap);
-                }
-                resultMapId = sb.toString();
-            } else if (isSelect) {
+             if (isSelect) {
                 resultMapId = parseResultMap(method);
             }
 
@@ -177,9 +138,6 @@ public class MapperAnnotationBuilder {
                     resultMapId,
                     getReturnType(method),
                     resultSetType,
-                    flushCache,
-                    useCache,
-                    // TODO gcode issue #577
                     false,
                     keyGenerator,
                     keyProperty,
@@ -188,10 +146,46 @@ public class MapperAnnotationBuilder {
                     null,
                     languageDriver,
                     // ResultSets
-                    options != null ? nullOrEmpty(options.resultSets()) : null);
+                    null);
         }
 
 
+    }
+
+    private String parseResultMap(Method method) {
+        Class<?> returnType = getReturnType(method);
+        String resultMapId = generateResultMapName(method);
+        applyResultMap(resultMapId,returnType);
+        return resultMapId;
+    }
+
+    private void applyResultMap(String resultMapId, Class<?> returnType) {
+        List<ResultMapping> resultMappings = new ArrayList<>();
+
+        assistant.addResultMap(resultMapId, returnType, null, resultMappings, null);
+    }
+
+    private String generateResultMapName(Method method) {
+
+        StringBuilder suffix = new StringBuilder();
+        for (Class<?> c : method.getParameterTypes()) {
+            suffix.append("-");
+            suffix.append(c.getSimpleName());
+        }
+        if (suffix.length() < 1) {
+            suffix.append("-void");
+        }
+        return type.getName() + "." + method.getName() + suffix;
+    }
+
+    private SqlCommandType getSqlCommandType(Method method) {
+        Class<? extends Annotation> type = getSqlAnnotationType(method);
+
+        if (type == null) {
+            return SqlCommandType.UNKNOWN;
+        }
+
+        return SqlCommandType.valueOf(type.getSimpleName().toUpperCase(Locale.ENGLISH));
     }
 
     /**
@@ -204,7 +198,7 @@ public class MapperAnnotationBuilder {
      */
     private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
         try {
-            Annotation annotation = getSqlAnnotationType(method);
+            Annotation annotation = getSqlAnnotationType(method,null);
             if (annotation != null) {
                 final String[] strings = (String[]) annotation.getClass().getMethod("value").invoke(annotation);
                 return buildSqlSourceFromStrings(strings, parameterType, languageDriver);
@@ -217,10 +211,11 @@ public class MapperAnnotationBuilder {
 
     /**
      * 获取注解类
+     *
      * @param method
      * @return
      */
-    private Annotation getSqlAnnotationType(Method method) {
+    private Annotation getSqlAnnotationType(Method method,Set<Class<? extends Annotation>> types) {
 
         for (Class<? extends Annotation> type : SQL_ANNOTATION_TYPES) {
             Annotation annotation = method.getAnnotation(type);
@@ -231,8 +226,12 @@ public class MapperAnnotationBuilder {
         return null;
     }
 
+    private Class<? extends Annotation> getSqlAnnotationType(Method method) {
+        return chooseAnnotationType(method, SQL_ANNOTATION_TYPES);
+    }
+
+
     /**
-     * 
      * @param strings
      * @param parameterTypeClass
      * @param languageDriver
@@ -249,13 +248,22 @@ public class MapperAnnotationBuilder {
 
     /**
      * 选择注解
+     *
      * @param method
      * @param types
      * @return
      */
     private Class<? extends Annotation> chooseAnnotationType(Method method, Set<Class<? extends Annotation>> types) {
-
+        for (Class<? extends Annotation> type : types) {
+            Annotation annotation = method.getAnnotation(type);
+            if (annotation != null) {
+                return type;
+            }
+        }
+        return null;
     }
+
+
 
     private LanguageDriver getLanguageDriver(Method method) {
 
@@ -263,12 +271,42 @@ public class MapperAnnotationBuilder {
 
     }
 
-    private Object getReturnType(Method method) {
-        return null;
+    private Class<?> getReturnType(Method method) {
+        Class<?> returnType = method.getReturnType();
+        Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, type);
+        if (resolvedReturnType instanceof Class) {
+            returnType = (Class<?>) resolvedReturnType;
+            if (returnType.isArray()) {
+                returnType = returnType.getComponentType();
+            }
+
+        } else if (resolvedReturnType instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) resolvedReturnType;
+            Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+            if (Collection.class.isAssignableFrom(rawType) || Cursor.class.isAssignableFrom(rawType)) {
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                if (actualTypeArguments != null && actualTypeArguments.length == 1) {
+                    Type returnTypeParameter = actualTypeArguments[0];
+                    if (returnTypeParameter instanceof Class<?>) {
+                        returnType = (Class<?>) returnTypeParameter;
+                    } else if (returnTypeParameter instanceof ParameterizedType) {
+                        // (gcode issue #443) actual type can be a also a parameterized type
+                        returnType = (Class<?>) ((ParameterizedType) returnTypeParameter).getRawType();
+                    } else if (returnTypeParameter instanceof GenericArrayType) {
+                        Class<?> componentType = (Class<?>) ((GenericArrayType) returnTypeParameter).getGenericComponentType();
+                        // (gcode issue #525) support List<byte[]>
+                        returnType = Array.newInstance(componentType, 0).getClass();
+                    }
+                }
+            }
+        }
+
+        return returnType;
     }
 
     /**
      * 获取返回值
+     *
      * @param method
      * @return
      */

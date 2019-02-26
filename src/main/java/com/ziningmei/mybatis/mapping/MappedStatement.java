@@ -15,10 +15,13 @@
  */
 package com.ziningmei.mybatis.mapping;
 
+import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
+import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
+import com.ziningmei.mybatis.logging.Log;
+import com.ziningmei.mybatis.logging.LogFactory;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 
-import javax.crypto.KeyGenerator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,10 +44,9 @@ public final class MappedStatement {
   private ParameterMap parameterMap;
   private List<ResultMap> resultMaps;
   private boolean flushCacheRequired;
-  private boolean useCache;
   private boolean resultOrdered;
   private SqlCommandType sqlCommandType;
-  private KeyGenerator keyGenerator;
+  private com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator;
   private String[] keyProperties;
   private String[] keyColumns;
   private boolean hasNestedResultMaps;
@@ -68,13 +70,13 @@ public final class MappedStatement {
       mappedStatement.parameterMap = new ParameterMap.Builder(configuration, "defaultParameterMap", null, new ArrayList<>()).build();
       mappedStatement.resultMaps = new ArrayList<>();
       mappedStatement.sqlCommandType = sqlCommandType;
-      mappedStatement.keyGenerator = configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType) ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
+      mappedStatement.keyGenerator = NoKeyGenerator.INSTANCE;
       String logId = id;
-      if (configuration.getLogPrefix() != null) {
-        logId = configuration.getLogPrefix() + id;
-      }
+//      if (configuration.getLogPrefix() != null) {
+//        logId = configuration.getLogPrefix() + id;
+//      }
       mappedStatement.statementLog = LogFactory.getLog(logId);
-      mappedStatement.lang = configuration.getDefaultScriptingLanguageInstance();
+      //mappedStatement.lang = configuration.getDefaultScriptingLanguageInstance();
     }
 
     public Builder resource(String resource) {
@@ -119,27 +121,18 @@ public final class MappedStatement {
       return this;
     }
 
-    public Builder cache(Cache cache) {
-      mappedStatement.cache = cache;
-      return this;
-    }
-
     public Builder flushCacheRequired(boolean flushCacheRequired) {
       mappedStatement.flushCacheRequired = flushCacheRequired;
       return this;
     }
 
-    public Builder useCache(boolean useCache) {
-      mappedStatement.useCache = useCache;
-      return this;
-    }
 
     public Builder resultOrdered(boolean resultOrdered) {
       mappedStatement.resultOrdered = resultOrdered;
       return this;
     }
 
-    public Builder keyGenerator(KeyGenerator keyGenerator) {
+    public Builder keyGenerator(com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator) {
       mappedStatement.keyGenerator = keyGenerator;
       return this;
     }
@@ -238,16 +231,8 @@ public final class MappedStatement {
     return resultMaps;
   }
 
-  public Cache getCache() {
-    return cache;
-  }
-
   public boolean isFlushCacheRequired() {
     return flushCacheRequired;
-  }
-
-  public boolean isUseCache() {
-    return useCache;
   }
 
   public boolean isResultOrdered() {

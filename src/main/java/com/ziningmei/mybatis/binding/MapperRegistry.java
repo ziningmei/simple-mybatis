@@ -2,6 +2,7 @@ package com.ziningmei.mybatis.binding;
 
 import com.ziningmei.mybatis.builder.annotation.MapperAnnotationBuilder;
 import com.ziningmei.mybatis.session.Configuration;
+import com.ziningmei.mybatis.session.SqlSession;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +55,21 @@ public class MapperRegistry {
                     knownMappers.remove(type);
                 }
             }
+        }
+    }
+
+    public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+        //获得 MapperProxyFactory 对象
+        final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
+        //不存在，则抛出 BindingException 异常
+        if (mapperProxyFactory == null) {
+            throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
+        }
+        try {
+            //创建 Mapper Proxy 对象
+            return mapperProxyFactory.newInstance(sqlSession);
+        } catch (Exception e) {
+            throw new BindingException("Error getting mapper instance. Cause: " + e, e);
         }
     }
 }

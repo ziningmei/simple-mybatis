@@ -15,6 +15,9 @@
  */
 package com.ziningmei.mybatis.io;
 
+import com.ziningmei.mybatis.logging.Log;
+import com.ziningmei.mybatis.logging.LogFactory;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
@@ -226,17 +229,6 @@ public class ResolverUtil<T> {
    */
   public ResolverUtil<T> find(Test test, String packageName) {
     String path = getPackagePath(packageName);
-
-    try {
-      List<String> children = VFS.getInstance().list(path);
-      for (String child : children) {
-        if (child.endsWith(".class")) {
-          addIfMatching(test, child);
-        }
-      }
-    } catch (IOException ioe) {
-      log.error("Could not read package: " + packageName, ioe);
-    }
 
     return this;
   }

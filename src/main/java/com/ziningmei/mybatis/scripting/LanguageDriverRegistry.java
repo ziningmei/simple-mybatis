@@ -55,6 +55,7 @@ public class LanguageDriverRegistry {
     }
 
     public void setDefaultDriverClass(Class<? extends LanguageDriver> defaultDriverClass) {
+        register(defaultDriverClass);
         this.defaultDriverClass = defaultDriverClass;
     }
 }

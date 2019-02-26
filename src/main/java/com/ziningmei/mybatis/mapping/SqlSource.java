@@ -25,6 +25,11 @@ package com.ziningmei.mybatis.mapping;
  */
 public interface SqlSource {
 
+  /**
+   * 获取捆绑的sql
+   * @param parameterObject
+   * @return
+   */
   BoundSql getBoundSql(Object parameterObject);
 
 }

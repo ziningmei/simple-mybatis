@@ -2,8 +2,13 @@ package com.ziningmei.mybatis.builder;
 
 import com.ziningmei.mybatis.mapping.ParameterMapping;
 import com.ziningmei.mybatis.mapping.SqlSource;
+import com.ziningmei.mybatis.parsing.GenericTokenParser;
 import com.ziningmei.mybatis.parsing.TokenHandler;
+import com.ziningmei.mybatis.reflection.MetaClass;
+import com.ziningmei.mybatis.reflection.MetaObject;
 import com.ziningmei.mybatis.session.Configuration;
+import com.ziningmei.mybatis.type.TypeHandler;
+import com.ziningmei.mybatis.type.TypeHandlerRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +16,17 @@ import java.util.Map;
 
 public class SqlSourceBuilder extends BaseBuilder {
 
+    private static final String parameterProperties = "javaType,jdbcType,mode,numericScale,resultMap,typeHandler,jdbcTypeName";
+
+
+    /**
+     * 类型处理
+     */
+    public final TypeHandlerRegistry typeHandlerRegistry;
+
     public SqlSourceBuilder(Configuration configuration) {
         super(configuration);
+        typeHandlerRegistry=configuration.getTypeHandlerRegistry();
     }
 
     public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
@@ -22,7 +36,7 @@ public class SqlSourceBuilder extends BaseBuilder {
         return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
     }
 
-    private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
+    private class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
 
         private List<ParameterMapping> parameterMappings = new ArrayList<>();
         private Class<?> parameterType;
@@ -48,15 +62,9 @@ public class SqlSourceBuilder extends BaseBuilder {
             Map<String, String> propertiesMap = parseParameterMapping(content);
             String property = propertiesMap.get("property");
             Class<?> propertyType;
-            if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
-                propertyType = metaParameters.getGetterType(property);
-            } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
+            if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
                 propertyType = parameterType;
-            } else if (JdbcType.CURSOR.name().equals(propertiesMap.get("jdbcType"))) {
-                propertyType = java.sql.ResultSet.class;
-            } else if (property == null || Map.class.isAssignableFrom(parameterType)) {
-                propertyType = Object.class;
-            } else {
+            }else {
                 MetaClass metaClass = MetaClass.forClass(parameterType, configuration.getReflectorFactory());
                 if (metaClass.hasGetter(property)) {
                     propertyType = metaClass.getGetterType(property);
@@ -64,6 +72,8 @@ public class SqlSourceBuilder extends BaseBuilder {
                     propertyType = Object.class;
                 }
             }
+
+
             ParameterMapping.Builder builder = new ParameterMapping.Builder(configuration, property, propertyType);
             Class<?> javaType = propertyType;
             String typeHandlerAlias = null;
@@ -108,5 +118,44 @@ public class SqlSourceBuilder extends BaseBuilder {
                 throw new BuilderException("Parsing error was found in mapping #{" + content + "}.  Check syntax #{property|(expression), var1=value1, var2=value2, ...} ", ex);
             }
         }
+
+        /**
+         * 从 typeHandlerRegistry 中获得或创建对应的 TypeHandler 对象
+         * @param javaType
+         * @param typeHandlerAlias
+         * @return
+         */
+        protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, String typeHandlerAlias) {
+            if (typeHandlerAlias == null) {
+                return null;
+            }
+            Class<?> type = resolveClass(typeHandlerAlias);
+            if (type != null && !TypeHandler.class.isAssignableFrom(type)) {
+                throw new BuilderException("Type " + type.getName() + " is not a valid TypeHandler because it does not implement TypeHandler interface");
+            }
+            @SuppressWarnings( "unchecked" ) // already verified it is a TypeHandler
+                    Class<? extends TypeHandler<?>> typeHandlerType = (Class<? extends TypeHandler<?>>) type;
+            return resolveTypeHandler(javaType, typeHandlerType);
+        }
+
+        /**
+         * 获取获得或创建对应的 TypeHandler 对象
+         * @param javaType
+         * @param typeHandlerType
+         * @return
+         */
+        protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, Class<? extends TypeHandler<?>> typeHandlerType) {
+            if (typeHandlerType == null) {
+                return null;
+            }
+            // javaType ignored for injected handlers see issue #746 for full detail
+            TypeHandler<?> handler = typeHandlerRegistry.getMappingTypeHandler(typeHandlerType);
+            if (handler == null) {
+                // not in registry, create a new one
+                handler = typeHandlerRegistry.getInstance(javaType, typeHandlerType);
+            }
+            return handler;
+        }
+
     }
 }

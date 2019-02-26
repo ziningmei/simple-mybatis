@@ -1,6 +1,8 @@
 package com.ziningmei.mybatis.builder;
 
+import com.ziningmei.mybatis.mapping.ParameterMode;
 import com.ziningmei.mybatis.session.Configuration;
+import com.ziningmei.mybatis.type.JdbcType;
 import com.ziningmei.mybatis.type.TypeAliasRegistry;
 
 /**
@@ -42,6 +44,38 @@ public class BaseBuilder {
     }
 
     /**
+     * 解析JdbcType
+     * @param alias
+     * @return
+     */
+    protected JdbcType resolveJdbcType(String alias) {
+        if (alias == null) {
+            return null;
+        }
+        try {
+            return JdbcType.valueOf(alias);
+        } catch (IllegalArgumentException e) {
+            throw new BuilderException("Error resolving JdbcType. Cause: " + e, e);
+        }
+    }
+
+    /**
+     * resolveParameterMode
+     * @param alias
+     * @return
+     */
+    protected ParameterMode resolveParameterMode(String alias) {
+        if (alias == null) {
+            return null;
+        }
+        try {
+            return ParameterMode.valueOf(alias);
+        } catch (IllegalArgumentException e) {
+            throw new BuilderException("Error resolving ParameterMode. Cause: " + e, e);
+        }
+    }
+
+    /**
      * 解析别名
      * @param alias
      * @param <T>
@@ -55,4 +89,6 @@ public class BaseBuilder {
     public Configuration getConfiguration() {
         return configuration;
     }
+
+
 }

@@ -20,7 +20,6 @@ import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.mapping.RawSqlSource;
 import com.ziningmei.mybatis.mapping.SqlSource;
-]import com.ziningmei.mybatis.parsing.PropertyParser;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 

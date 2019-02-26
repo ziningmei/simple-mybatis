@@ -15,9 +15,10 @@
  */
 package com.ziningmei.mybatis.mapping;
 
-import org.apache.ibatis.reflection.MetaObject;
-import org.apache.ibatis.reflection.property.PropertyTokenizer;
-import org.apache.ibatis.session.Configuration;
+
+import com.ziningmei.mybatis.reflection.MetaObject;
+import com.ziningmei.mybatis.reflection.property.PropertyTokenizer;
+import com.ziningmei.mybatis.session.Configuration;
 
 import java.util.HashMap;
 import java.util.List;

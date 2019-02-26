@@ -19,11 +19,14 @@ package com.ziningmei.mybatis.mapping;
 import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.type.JdbcType;
 import com.ziningmei.mybatis.type.TypeHandler;
+import com.ziningmei.mybatis.type.TypeHandlerRegistry;
 
 import java.sql.ResultSet;
 
 /**
  * @author Clinton Begin
+ *
+ * 参数映射
  */
 public class ParameterMapping {
 
