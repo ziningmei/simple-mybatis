@@ -15,7 +15,6 @@
  */
 package com.ziningmei.mybatis.executor;
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.logging.Log;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
@@ -40,19 +39,6 @@ public class SimpleExecutor extends BaseExecutor {
   }
 
   @Override
-  public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
-    Statement stmt = null;
-    try {
-      Configuration configuration = ms.getConfiguration();
-      StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
-      stmt = prepareStatement(handler, ms.getStatementLog());
-      return handler.update(stmt);
-    } finally {
-      closeStatement(stmt);
-    }
-  }
-
-  @Override
   public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
     Statement stmt = null;
     try {
@@ -63,14 +49,6 @@ public class SimpleExecutor extends BaseExecutor {
     } finally {
       closeStatement(stmt);
     }
-  }
-
-  @Override
-  protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
-    Configuration configuration = ms.getConfiguration();
-    StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
-    Statement stmt = prepareStatement(handler, ms.getStatementLog());
-    return handler.<E>queryCursor(stmt);
   }
 
   @Override

@@ -16,10 +16,15 @@
 package com.ziningmei.mybatis.parsing;
 
 /**
- *
+ * 签名处理接口
  */
 public interface TokenHandler {
 
+  /**
+   * 处理签名
+   * @param content
+   * @return
+   */
   String handleToken(String content);
 
 

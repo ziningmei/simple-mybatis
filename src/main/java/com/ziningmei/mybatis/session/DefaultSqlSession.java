@@ -119,30 +119,6 @@ public class DefaultSqlSession implements SqlSession {
     }
 
     @Override
-    public <T> Cursor<T> selectCursor(String statement) {
-        return selectCursor(statement, null);
-    }
-
-    @Override
-    public <T> Cursor<T> selectCursor(String statement, Object parameter) {
-        return selectCursor(statement, parameter, RowBounds.DEFAULT);
-    }
-
-    @Override
-    public <T> Cursor<T> selectCursor(String statement, Object parameter, RowBounds rowBounds) {
-        try {
-            MappedStatement ms = configuration.getMappedStatement(statement);
-            Cursor<T> cursor = executor.queryCursor(ms, wrapCollection(parameter), rowBounds);
-            registerCursor(cursor);
-            return cursor;
-        } catch (Exception e) {
-            throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
-        } finally {
-            ErrorContext.instance().reset();
-        }
-    }
-
-    @Override
     public <E> List<E> selectList(String statement) {
         return this.selectList(statement, null);
     }
@@ -186,43 +162,6 @@ public class DefaultSqlSession implements SqlSession {
         }
     }
 
-    @Override
-    public int insert(String statement) {
-        return insert(statement, null);
-    }
-
-    @Override
-    public int insert(String statement, Object parameter) {
-        return update(statement, parameter);
-    }
-
-    @Override
-    public int update(String statement) {
-        return update(statement, null);
-    }
-
-    @Override
-    public int update(String statement, Object parameter) {
-        try {
-            dirty = true;
-            MappedStatement ms = configuration.getMappedStatement(statement);
-            return executor.update(ms, wrapCollection(parameter));
-        } catch (Exception e) {
-            throw ExceptionFactory.wrapException("Error updating database.  Cause: " + e, e);
-        } finally {
-            ErrorContext.instance().reset();
-        }
-    }
-
-    @Override
-    public int delete(String statement) {
-        return update(statement, null);
-    }
-
-    @Override
-    public int delete(String statement, Object parameter) {
-        return update(statement, parameter);
-    }
 
     @Override
     public void commit() {

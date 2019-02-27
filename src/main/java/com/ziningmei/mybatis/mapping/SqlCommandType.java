@@ -16,8 +16,20 @@
 package com.ziningmei.mybatis.mapping;
 
 /**
- * @author Clinton Begin
+ *
+ * 指定集
  */
 public enum SqlCommandType {
-  UNKNOWN, INSERT, UPDATE, DELETE, SELECT, FLUSH;
+  /**
+   * 未知
+   */
+  UNKNOWN,
+  INSERT,
+  UPDATE,
+  DELETE,
+  /**
+   * 查询
+   */
+  SELECT,
+  FLUSH;
 }

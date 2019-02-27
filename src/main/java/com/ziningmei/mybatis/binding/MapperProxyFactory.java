@@ -17,17 +17,18 @@ public class MapperProxyFactory<T> {
     private final Map<Method, MapperMethod> methodCache = new ConcurrentHashMap<>();
 
 
+    /**
+     * 通过接口 初始化MapperProxyFactory
+     * @param mapperInterface
+     */
     public MapperProxyFactory(Class<T> mapperInterface) {
         this.mapperInterface = mapperInterface;
     }
 
-    protected T newInstance(MapperProxy<T> mapperProxy) {
-        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
-    }
-
     public T newInstance(SqlSession sqlSession) {
         final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
-        return newInstance(mapperProxy);
+
+        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[]{mapperInterface}, mapperProxy);
     }
 
 }

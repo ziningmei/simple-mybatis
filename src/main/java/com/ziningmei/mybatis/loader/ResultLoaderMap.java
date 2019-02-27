@@ -15,7 +15,6 @@
  */
 package com.ziningmei.mybatis.loader;
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.executor.BaseExecutor;
 import com.ziningmei.mybatis.executor.BatchResult;
 import com.ziningmei.mybatis.executor.ExecutorException;
@@ -290,11 +289,6 @@ public class ResultLoaderMap {
     }
 
     @Override
-    protected int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
-      throw new UnsupportedOperationException("Not supported.");
-    }
-
-    @Override
     protected List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
       throw new UnsupportedOperationException("Not supported.");
     }
@@ -304,9 +298,5 @@ public class ResultLoaderMap {
       throw new UnsupportedOperationException("Not supported.");
     }
 
-    @Override
-    protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
-      throw new UnsupportedOperationException("Not supported.");
-    }
   }
 }

@@ -29,6 +29,10 @@ public class MapperRegistry {
     }
 
 
+    /**
+     * 添加需要解析的mapper
+     * @param type
+     */
     public void addMapper(Class<?> type) {
         //必须是接口
         if (type.isInterface()) {
@@ -36,7 +40,7 @@ public class MapperRegistry {
             if (hasMapper(type)) {
                 throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
             }
-
+            //记录是否加载完成
             boolean loadCompleted = false;
             try {
                 //添加到knownMappers
@@ -44,8 +48,10 @@ public class MapperRegistry {
                 // It's important that the type is added before the parser is run
                 // otherwise the binding may automatically be attempted by the
                 // mapper parser. If the type is already known, it won't try.
+
                 //解析 Mapper 的注解配置
                 MapperAnnotationBuilder parser = new MapperAnnotationBuilder(configuration, type);
+                //解析注解
                 parser.parse();
                 //标记加载完成
                 loadCompleted = true;

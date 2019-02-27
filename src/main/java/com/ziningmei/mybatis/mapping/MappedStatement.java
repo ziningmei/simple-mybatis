@@ -43,7 +43,6 @@ public final class MappedStatement {
   private SqlSource sqlSource;
   private ParameterMap parameterMap;
   private List<ResultMap> resultMaps;
-  private boolean flushCacheRequired;
   private boolean resultOrdered;
   private SqlCommandType sqlCommandType;
   private com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator;
@@ -120,12 +119,6 @@ public final class MappedStatement {
       mappedStatement.resultSetType = resultSetType;
       return this;
     }
-
-    public Builder flushCacheRequired(boolean flushCacheRequired) {
-      mappedStatement.flushCacheRequired = flushCacheRequired;
-      return this;
-    }
-
 
     public Builder resultOrdered(boolean resultOrdered) {
       mappedStatement.resultOrdered = resultOrdered;
@@ -229,10 +222,6 @@ public final class MappedStatement {
 
   public List<ResultMap> getResultMaps() {
     return resultMaps;
-  }
-
-  public boolean isFlushCacheRequired() {
-    return flushCacheRequired;
   }
 
   public boolean isResultOrdered() {

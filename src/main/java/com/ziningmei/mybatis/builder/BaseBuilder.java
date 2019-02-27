@@ -23,11 +23,11 @@ public class BaseBuilder {
     public BaseBuilder(Configuration configuration) {
         this.configuration = configuration;
         this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
-
     }
 
     /**
-     * 创建对象
+     * 获取Class
+     *
      * @param alias
      * @param <T>
      * @return
@@ -36,8 +36,9 @@ public class BaseBuilder {
         if (alias == null) {
             return null;
         }
+
         try {
-            return resolveAlias(alias);
+            return typeAliasRegistry.resolveAlias(alias);
         } catch (Exception e) {
             throw new BuilderException("Error resolving class. Cause: " + e, e);
         }
@@ -75,16 +76,6 @@ public class BaseBuilder {
         }
     }
 
-    /**
-     * 解析别名
-     * @param alias
-     * @param <T>
-     * @return
-     */
-    protected <T> Class<? extends T> resolveAlias(String alias) {
-
-        return typeAliasRegistry.resolveAlias(alias);
-    }
 
     public Configuration getConfiguration() {
         return configuration;

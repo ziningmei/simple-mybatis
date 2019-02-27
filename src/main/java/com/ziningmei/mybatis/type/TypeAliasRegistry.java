@@ -15,6 +15,9 @@ public class TypeAliasRegistry {
      */
     private final Map<String, Class<?>> TYPE_ALIASES = new HashMap<>();
 
+    /**
+     * 初始化一些类的别名
+     */
     public TypeAliasRegistry() {
         registerAlias("string", String.class);
 
@@ -77,7 +80,7 @@ public class TypeAliasRegistry {
     }
 
     /**
-     * 注册
+     * 注册别名，其实就是把名称和value存下来
      * @param alias
      * @param value
      */
@@ -94,16 +97,24 @@ public class TypeAliasRegistry {
         TYPE_ALIASES.put(key, value);
     }
 
+    /**
+     * 根据名称获取Class
+     * @param string
+     * @param <T>
+     * @return
+     */
     public <T> Class<T> resolveAlias(String string) {
         try {
             if (string == null) {
                 return null;
             }
-            // issue #748
+            // 转化为小写，避免大小写问题
             String key = string.toLowerCase(Locale.ENGLISH);
             Class<T> value;
+            //如果TYPE_ALIASES中有，就直接获取
             if (TYPE_ALIASES.containsKey(key)) {
                 value = (Class<T>) TYPE_ALIASES.get(key);
+                //如果没有的话，只能用反射创建了
             } else {
                 value = (Class<T>) Resources.classForName(string);
             }

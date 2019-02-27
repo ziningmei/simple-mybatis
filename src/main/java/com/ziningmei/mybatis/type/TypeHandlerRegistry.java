@@ -128,7 +128,7 @@ public final class TypeHandlerRegistry {
             }
         }
         // type drives generics here
-        return (TypeHandler<T>) handler;
+        return (TypeHandler) handler;
 
     }
 

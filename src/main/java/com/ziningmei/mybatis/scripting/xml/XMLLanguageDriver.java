@@ -38,6 +38,7 @@ public class XMLLanguageDriver implements LanguageDriver {
      */
     @Override
     public ParameterHandler createParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+
         //使用defaultParameterHandler
         return new DefaultParameterHandler(mappedStatement, parameterObject, boundSql);
     }
@@ -45,9 +46,6 @@ public class XMLLanguageDriver implements LanguageDriver {
 
     @Override
     public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
-
-        //创建TextSqlNode
-        TextSqlNode textSqlNode = new TextSqlNode(script);
 
         //返回rawsql
         return new RawSqlSource(configuration, script, parameterType);

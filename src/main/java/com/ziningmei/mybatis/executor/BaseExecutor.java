@@ -15,14 +15,11 @@
  */
 package com.ziningmei.mybatis.executor;
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.logging.ConnectionLogger;
 import com.ziningmei.mybatis.logging.Log;
 import com.ziningmei.mybatis.logging.LogFactory;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
-import com.ziningmei.mybatis.reflection.MetaObject;
-import com.ziningmei.mybatis.reflection.factory.ObjectFactory;
 import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.session.ResultHandler;
 import com.ziningmei.mybatis.session.RowBounds;
@@ -32,7 +29,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author Clinton Begin
@@ -44,7 +40,6 @@ public abstract class BaseExecutor implements Executor {
     protected Transaction transaction;
     protected Executor wrapper;
 
-    protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
     protected Configuration configuration;
 
     protected int queryStack;
@@ -52,7 +47,6 @@ public abstract class BaseExecutor implements Executor {
 
     protected BaseExecutor(Configuration configuration, Transaction transaction) {
         this.transaction = transaction;
-        this.deferredLoads = new ConcurrentLinkedQueue<>();
         this.closed = false;
         this.configuration = configuration;
         this.wrapper = this;
@@ -81,7 +75,6 @@ public abstract class BaseExecutor implements Executor {
             log.warn("Unexpected exception on closing transaction.  Cause: " + e);
         } finally {
             transaction = null;
-            deferredLoads = null;
             closed = true;
         }
     }
@@ -91,26 +84,6 @@ public abstract class BaseExecutor implements Executor {
         return closed;
     }
 
-    @Override
-    public int update(MappedStatement ms, Object parameter) throws SQLException {
-        ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId());
-        if (closed) {
-            throw new ExecutorException("Executor was closed.");
-        }
-        return doUpdate(ms, parameter);
-    }
-
-    @Override
-    public List<BatchResult> flushStatements() throws SQLException {
-        return flushStatements(false);
-    }
-
-    public List<BatchResult> flushStatements(boolean isRollBack) throws SQLException {
-        if (closed) {
-            throw new ExecutorException("Executor was closed.");
-        }
-        return doFlushStatements(isRollBack);
-    }
 
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
@@ -118,41 +91,31 @@ public abstract class BaseExecutor implements Executor {
         return query(ms, parameter, rowBounds, resultHandler, boundSql);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * 错误上下文工具类
+     *
+     * @param ms
+     * @param parameter
+     * @param rowBounds
+     * @param resultHandler
+     * @param boundSql
+     * @param <E>
+     * @return
+     * @throws SQLException
+     */
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
         ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
         if (closed) {
             throw new ExecutorException("Executor was closed.");
         }
-        if (queryStack == 0 && ms.isFlushCacheRequired()) {
 
-        }
         List<E> list;
-        try {
-            queryStack++;
 
-            list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, boundSql);
+        list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, boundSql);
 
-        } finally {
-            queryStack--;
-        }
-        if (queryStack == 0) {
-            for (DeferredLoad deferredLoad : deferredLoads) {
-
-            }
-            // issue #601
-            deferredLoads.clear();
-        }
         return list;
     }
-
-    @Override
-    public <E> Cursor<E> queryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds) throws SQLException {
-        BoundSql boundSql = ms.getBoundSql(parameter);
-        return doQueryCursor(ms, parameter, rowBounds, boundSql);
-    }
-
 
     @Override
     public void commit(boolean required) throws SQLException {
@@ -166,10 +129,19 @@ public abstract class BaseExecutor implements Executor {
     }
 
     @Override
+    public List<BatchResult> flushStatements()throws SQLException{
+        if (closed) {
+            throw new ExecutorException("Executor was closed.");
+        }
+        return doFlushStatements(false);
+    }
+
+
+    @Override
     public void rollback(boolean required) throws SQLException {
         if (!closed) {
             try {
-                flushStatements(true);
+                flushStatements();
             } finally {
                 if (required) {
                     transaction.rollback();
@@ -178,17 +150,11 @@ public abstract class BaseExecutor implements Executor {
         }
     }
 
-    protected abstract int doUpdate(MappedStatement ms, Object parameter)
-            throws SQLException;
-
-    protected abstract List<BatchResult> doFlushStatements(boolean isRollback)
-            throws SQLException;
+    protected abstract List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException;
 
     protected abstract <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)
             throws SQLException;
 
-    protected abstract <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)
-            throws SQLException;
 
     protected void closeStatement(Statement statement) {
         if (statement != null) {
@@ -204,10 +170,11 @@ public abstract class BaseExecutor implements Executor {
 
     /**
      * Apply a transaction timeout.
+     *
      * @param statement a current statement
      * @throws SQLException if a database access error occurs, this method is called on a closed <code>Statement</code>
-     * @since 3.4.0
      * @see StatementUtil#applyTransactionTimeout(Statement, Integer, Integer)
+     * @since 3.4.0
      */
     protected void applyTransactionTimeout(Statement statement) throws SQLException {
         StatementUtil.applyTransactionTimeout(statement, statement.getQueryTimeout(), transaction.getTimeout());
@@ -230,34 +197,6 @@ public abstract class BaseExecutor implements Executor {
         } else {
             return connection;
         }
-    }
-
-    @Override
-    public void setExecutorWrapper(Executor wrapper) {
-        this.wrapper = wrapper;
-    }
-
-    private static class DeferredLoad {
-
-        private final MetaObject resultObject;
-        private final String property;
-        private final Class<?> targetType;
-        private final ObjectFactory objectFactory;
-        private final ResultExtractor resultExtractor;
-
-        // issue #781
-        public DeferredLoad(MetaObject resultObject,
-                            String property,
-                            Configuration configuration,
-                            Class<?> targetType) {
-            this.resultObject = resultObject;
-            this.property = property;
-            this.objectFactory = configuration.getObjectFactory();
-            this.resultExtractor = new ResultExtractor(configuration, objectFactory);
-            this.targetType = targetType;
-        }
-
-
     }
 
 }

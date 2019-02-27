@@ -8,24 +8,22 @@ import com.ziningmei.mybatis.binding.MapperMethod;
 import com.ziningmei.mybatis.builder.BuilderException;
 import com.ziningmei.mybatis.builder.IncompleteElementException;
 import com.ziningmei.mybatis.builder.MapperBuilderAssistant;
-import com.ziningmei.mybatis.builder.xml.XMLMapperBuilder;
 import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
 import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
-import com.ziningmei.mybatis.io.Resources;
 import com.ziningmei.mybatis.mapping.*;
 import com.ziningmei.mybatis.reflection.TypeParameterResolver;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
+import com.ziningmei.mybatis.scripting.xml.XMLLanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
-import com.ziningmei.mybatis.session.RowBounds;
-import sun.plugin2.main.server.ResultHandler;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
+/**
+ * mapper 注解构造器
+ */
 public class MapperAnnotationBuilder {
 
     /**
@@ -46,10 +44,19 @@ public class MapperAnnotationBuilder {
         SQL_ANNOTATION_TYPES.add(Delete.class);
     }
 
+    /**
+     * 通过configuration和类初始化
+     *
+     * @param configuration
+     * @param type
+     */
     public MapperAnnotationBuilder(Configuration configuration, Class<?> type) {
+        //修改resource的名字
         String resource = type.getName().replace('.', '/') + ".java (best guess)";
 
         this.configuration = configuration;
+
+        //初始化帮助类
         assistant = new MapperBuilderAssistant(configuration, resource);
         this.type = type;
 
@@ -60,13 +67,14 @@ public class MapperAnnotationBuilder {
      * 解析注解
      */
     public void parse() {
-        //获取类型名称
+        // 获取类型名称
         String resource = type.toString();
+        // 老套路，判断有没有加载过,判断的是接口
         if (!configuration.isResourceLoaded(resource)) {
-            //加载xml格式
-            loadXmlResource();
+
             //添加到已经加载到资源
             configuration.addLoadedResource(resource);
+
             //设置当前到空间
             assistant.setCurrentNamespace(type.getName());
             //获取所有方法
@@ -75,7 +83,10 @@ public class MapperAnnotationBuilder {
             for (Method method : methods) {
                 try {
                     // issue #237
+                    // 如果不是桥接方法，则解析
                     if (!method.isBridge()) {
+
+                        //解析语句
                         parseStatement(method);
                     }
                 } catch (IncompleteElementException e) {
@@ -85,16 +96,11 @@ public class MapperAnnotationBuilder {
         }
         parsePendingMethods();
 
-
     }
 
     private void parsePendingMethods() {
 
 
-    }
-
-    private String nullOrEmpty(String value) {
-        return value == null || value.trim().length() == 0 ? null : value;
     }
 
     /**
@@ -103,8 +109,11 @@ public class MapperAnnotationBuilder {
      * @param method
      */
     public void parseStatement(Method method) {
+        //获取参数类
         Class<?> parameterTypeClass = getParameterType(method);
-        LanguageDriver languageDriver = getLanguageDriver(method);
+        //获取语言驱动
+        LanguageDriver languageDriver = getLanguageDriver();
+        //获取SqlSource
         SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
         if (sqlSource != null) {
             final String mappedStatementId = type.getName() + "." + method.getName();
@@ -121,7 +130,7 @@ public class MapperAnnotationBuilder {
 
 
             String resultMapId = null;
-             if (isSelect) {
+            if (isSelect) {
                 resultMapId = parseResultMap(method);
             }
 
@@ -155,7 +164,7 @@ public class MapperAnnotationBuilder {
     private String parseResultMap(Method method) {
         Class<?> returnType = getReturnType(method);
         String resultMapId = generateResultMapName(method);
-        applyResultMap(resultMapId,returnType);
+        applyResultMap(resultMapId, returnType);
         return resultMapId;
     }
 
@@ -198,9 +207,13 @@ public class MapperAnnotationBuilder {
      */
     private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
         try {
-            Annotation annotation = getSqlAnnotationType(method,null);
+            //获取注解
+            Annotation annotation = method.getAnnotation(getSqlAnnotationType(method));
+            //如果注解为空
             if (annotation != null) {
+                //获取注解的值
                 final String[] strings = (String[]) annotation.getClass().getMethod("value").invoke(annotation);
+                //创建SqlSource
                 return buildSqlSourceFromStrings(strings, parameterType, languageDriver);
             }
             return null;
@@ -209,29 +222,14 @@ public class MapperAnnotationBuilder {
         }
     }
 
-    /**
-     * 获取注解类
-     *
-     * @param method
-     * @return
-     */
-    private Annotation getSqlAnnotationType(Method method,Set<Class<? extends Annotation>> types) {
-
-        for (Class<? extends Annotation> type : SQL_ANNOTATION_TYPES) {
-            Annotation annotation = method.getAnnotation(type);
-            if (annotation != null) {
-                return annotation;
-            }
-        }
-        return null;
-    }
-
     private Class<? extends Annotation> getSqlAnnotationType(Method method) {
         return chooseAnnotationType(method, SQL_ANNOTATION_TYPES);
     }
 
 
     /**
+     *
+     * 创建SqlSource
      * @param strings
      * @param parameterTypeClass
      * @param languageDriver
@@ -247,7 +245,7 @@ public class MapperAnnotationBuilder {
     }
 
     /**
-     * 选择注解
+     * 获取注解
      *
      * @param method
      * @param types
@@ -264,10 +262,14 @@ public class MapperAnnotationBuilder {
     }
 
 
+    /**
+     * 获取语言驱动
+     *
+     * @return
+     */
+    private LanguageDriver getLanguageDriver() {
 
-    private LanguageDriver getLanguageDriver(Method method) {
-
-        return assistant.getLanguageDriver(null);
+        return new XMLLanguageDriver();
 
     }
 
@@ -305,7 +307,7 @@ public class MapperAnnotationBuilder {
     }
 
     /**
-     * 获取返回值
+     * 获取参数
      *
      * @param method
      * @return
@@ -315,45 +317,20 @@ public class MapperAnnotationBuilder {
 
         Class<?>[] parameterTypes = method.getParameterTypes();
         //遍历参数类型数组
-
-
         for (Class<?> currentParameterType : parameterTypes) {
-            //排除 RowBounds 和 ResultHandler 两种参数
-            if (!RowBounds.class.isAssignableFrom(currentParameterType) && !ResultHandler.class.isAssignableFrom(currentParameterType)) {
-                if (parameterType == null) {
-                    //如果是单参数，则是该参数的类型
-                    parameterType = currentParameterType;
-                } else {
-                    // issue #135
-                    // 如果是多参数，则是 ParamMap 类型
-                    parameterType = MapperMethod.ParamMap.class;
-                }
+
+            //如果为空，设置
+            if (parameterType == null) {
+                //如果是单参数，则是该参数的类型
+                parameterType = currentParameterType;
+            } else {
+                // issue #135
+                // 如果是多参数，则是 ParamMap 类型
+                parameterType = MapperMethod.ParamMap.class;
             }
+
         }
         return parameterType;
-    }
-
-    /**
-     * 加载xml资源
-     */
-    private void loadXmlResource() {
-        // Spring may not know the real resource name so we check a flag
-        // to prevent loading again a resource twice
-        // this flag is set at XMLMapperBuilder#bindMapperForNamespace
-        // 如果没有被加载
-        if (!configuration.isResourceLoaded("namespace:" + type.getName())) {
-            String xmlResource = type.getName().replace('.', '/') + ".xml";
-            InputStream inputStream = null;
-            try {
-                inputStream = Resources.getResourceAsStream(type.getClassLoader(), xmlResource);
-            } catch (IOException e) {
-                // ignore, resource is not required
-            }
-            if (inputStream != null) {
-                XMLMapperBuilder xmlParser = new XMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
-                xmlParser.parse();
-            }
-        }
     }
 
 

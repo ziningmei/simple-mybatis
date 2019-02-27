@@ -78,34 +78,24 @@ public class ClassLoaderWrapper {
                 systemClassLoader};
     }
 
-    public Class<?> classForName(String className)throws ClassNotFoundException {
-        return classForName(className, getClassLoaders(null));
-    }
-
-    /*
-     * Attempt to load a class from a group of classloaders
-     * 循环遍历初始化类
-     *
-     * @param name        - the class to load
-     * @param classLoader - the group of classloaders to examine
-     * @return the class
-     * @throws ClassNotFoundException - Remember the wisdom of Judge Smails: Well, the world needs ditch diggers, too.
+    /**
+     * 通过类名获取class对象
+     * @param className
+     * @return
+     * @throws ClassNotFoundException
      */
-    Class<?> classForName(String name, ClassLoader[] classLoader) throws ClassNotFoundException {
-
+    public Class<?> classForName(String className)throws ClassNotFoundException {
+        //获取所有的类加载器，尝试加载类
+        ClassLoader[] classLoader = getClassLoaders(null);
         //循环遍历初始化类
         for (ClassLoader cl : classLoader) {
 
             if (null != cl) {
-
                 try {
-
-                    Class<?> c = Class.forName(name, true, cl);
-
+                    Class<?> c = Class.forName(className, true, cl);
                     if (null != c) {
                         return c;
                     }
-
                 } catch (ClassNotFoundException e) {
                     // we'll ignore this until all classloaders fail to locate the class
                 }
@@ -114,6 +104,8 @@ public class ClassLoaderWrapper {
 
         }
 
-        throw new ClassNotFoundException("Cannot find class: " + name);
+        throw new ClassNotFoundException("Cannot find class: " + className);
+
     }
+
 }

@@ -16,7 +16,6 @@ import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.mapping.ParameterMap;
 import com.ziningmei.mybatis.mapping.ResultMap;
 import com.ziningmei.mybatis.parsing.XNode;
-import com.ziningmei.mybatis.plugin.InterceptorChain;
 import com.ziningmei.mybatis.reflection.MetaObject;
 import com.ziningmei.mybatis.reflection.factory.DefaultObjectFactory;
 import com.ziningmei.mybatis.reflection.factory.DefaultReflectorFactory;
@@ -24,8 +23,6 @@ import com.ziningmei.mybatis.reflection.factory.ObjectFactory;
 import com.ziningmei.mybatis.reflection.factory.ReflectorFactory;
 import com.ziningmei.mybatis.reflection.wrapper.DefaultObjectWrapperFactory;
 import com.ziningmei.mybatis.reflection.wrapper.ObjectWrapperFactory;
-import com.ziningmei.mybatis.scripting.LanguageDriverRegistry;
-import com.ziningmei.mybatis.scripting.xml.XMLLanguageDriver;
 import com.ziningmei.mybatis.transaction.JdbcTransactionFactory;
 import com.ziningmei.mybatis.transaction.Transaction;
 import com.ziningmei.mybatis.type.TypeAliasRegistry;
@@ -54,11 +51,6 @@ public class Configuration {
      * sql片段
      */
     protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
-
-    /**
-     * 初始化语言驱动注册
-     */
-    protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
     /**
      * 已加载资源( Resource )集合
@@ -126,12 +118,6 @@ public class Configuration {
     protected Class<?> configurationFactory;
 
     /**
-     * 拦截器链
-     */
-    protected final InterceptorChain interceptorChain = new InterceptorChain();
-
-
-    /**
      * 设置自动映射
      */
     protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
@@ -147,29 +133,11 @@ public class Configuration {
     boolean mapUnderscoreToCamelCase=false;
 
 
-    protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
-
-
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
-        //typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
 
-        //typeAliasRegistry.registerAlias("JNDI", JndiDataSourceFactory.class);
-        //typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
         typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
 
-        //typeAliasRegistry.registerAlias("PERPETUAL", PerpetualCache.class);
-
-        //typeAliasRegistry.registerAlias("DB_VENDOR", VendorDatabaseIdProvider.class);
-
-        //ypeAliasRegistry.registerAlias("XML", XMLLanguageDriver.class);
-        //typeAliasRegistry.registerAlias("RAW", RawLanguageDriver.class);
-
-
-        //typeAliasRegistry.registerAlias("CGLIB", CglibProxyFactory.class);
-        //typeAliasRegistry.registerAlias("JAVASSIST", JavassistProxyFactory.class);
-
-        languageRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
     }
 
     public TypeHandlerRegistry getTypeHandlerRegistry() {
@@ -222,6 +190,12 @@ public class Configuration {
         return mapperRegistry.hasMapper(boundType);
     }
 
+    /**
+     * mapperRegistry添加mapper
+     *
+     * @param boundType
+     * @param <T>
+     */
     public <T> void addMapper(Class<T> boundType) {
         mapperRegistry.addMapper(boundType);
     }
@@ -232,10 +206,6 @@ public class Configuration {
 
     public MapperRegistry getMapperRegistry() {
         return mapperRegistry;
-    }
-
-    public LanguageDriverRegistry getLanguageRegistry() {
-        return languageRegistry;
     }
 
     protected static class StrictMap<V> extends HashMap<String, V> {
@@ -340,8 +310,6 @@ public class Configuration {
         //创建执行器
         Executor executor = new SimpleExecutor(this, transaction);
 
-        // 添加插件
-        // executor = (Executor) interceptorChain.pluginAll(executor);
         return executor;
     }
 
@@ -396,20 +364,17 @@ public class Configuration {
 
     public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-        statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
         return statementHandler;
     }
 
     public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
         ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
-        parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
         return parameterHandler;
     }
 
     public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
                                                 ResultHandler resultHandler, BoundSql boundSql) {
         ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
-        resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
         return resultSetHandler;
     }
 

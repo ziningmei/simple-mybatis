@@ -16,7 +16,6 @@
 package com.ziningmei.mybatis.executor;
 
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.session.ResultHandler;
@@ -27,7 +26,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * @author Clinton Begin
  *
  * 执行器
  */
@@ -35,26 +33,58 @@ public interface Executor {
 
   ResultHandler NO_RESULT_HANDLER = null;
 
-  int update(MappedStatement ms, Object parameter) throws SQLException;
-
-  <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
-
   <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException;
 
-  <E> Cursor<E> queryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds) throws SQLException;
+  /**
+   * 执行查询语句
+   *
+   * @param ms
+   * @param parameter
+   * @param rowBounds
+   * @param resultHandler
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
+  <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
 
-  List<BatchResult> flushStatements() throws SQLException;
-
+  /**
+   * 提交
+   * @param required
+   * @throws SQLException
+   */
   void commit(boolean required) throws SQLException;
 
+  /**
+   *
+   * @throws SQLException
+   */
+  List<BatchResult> flushStatements()throws SQLException;
+
+  /**
+   * 回滚
+   * @param required
+   * @throws SQLException
+   */
   void rollback(boolean required) throws SQLException;
 
+  /**
+   * 获取事务
+   * @return
+   */
   Transaction getTransaction();
 
+  /**
+   * 关闭executor
+   * @param forceRollback
+   */
   void close(boolean forceRollback);
 
+  /**
+   * 判断是否关闭
+   * @return
+   */
   boolean isClosed();
-
-  void setExecutorWrapper(Executor executor);
 
 }

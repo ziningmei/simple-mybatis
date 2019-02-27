@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Calendar;
 
 /**
  * 资源加载
@@ -63,7 +62,8 @@ public class Resources {
 
     /*
      * Loads a class
-     * 获取类
+     *
+     * 通过名称获取class
      *
      * @param className - the class to fetch
      * @return The loaded class
