@@ -20,6 +20,7 @@ import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.session.ResultHandler;
 import com.ziningmei.mybatis.session.RowBounds;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
@@ -49,7 +50,29 @@ public class ParamNameResolver {
 
   public ParamNameResolver(Configuration config, Method method) {
     final Class<?>[] paramTypes = method.getParameterTypes();
+    final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
+    int paramCount = paramAnnotations.length;
+    // get names from @Param annotations
+    for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
+
+      if (isSpecialParameter(paramTypes[paramIndex])) {
+        // skip special parameters
+        continue;
+      }
+
+      String name = null;
+      name = getActualParamName(method, paramIndex);
+
+      if (name == null) {
+        // use the parameter index as the name ("0", "1", ...)
+        // gcode issue #71
+        name = String.valueOf(map.size());
+      }
+
+      map.put(paramIndex, name);
+
+    }
     // get names from @Param annotations
     names = Collections.unmodifiableSortedMap(map);
   }

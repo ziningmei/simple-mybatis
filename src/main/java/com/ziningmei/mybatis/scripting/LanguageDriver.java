@@ -37,7 +37,7 @@ public interface LanguageDriver {
    * @param boundSql The resulting SQL once the dynamic language has been executed.
    * @return
    * @author Frank D. Martinez [mnesarco]
-   * @see DefaultParameterHandler
+   * @see com.ziningmei.mybatis.scripting.xml.DefaultParameterHandler
    */
   ParameterHandler createParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql);
 

@@ -15,10 +15,10 @@
  */
 package com.ziningmei.mybatis.executor.keygen;
 
+import com.ziningmei.mybatis.executor.Executor;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 
 import java.sql.Statement;
-import java.util.concurrent.Executor;
 
 /**
  * @author Clinton Begin
@@ -32,14 +32,14 @@ public class NoKeyGenerator implements KeyGenerator {
    */
   public static final NoKeyGenerator INSTANCE = new NoKeyGenerator();
 
+
   @Override
   public void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
-    // Do Nothing
+
   }
 
   @Override
   public void processAfter(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
-    // Do Nothing
-  }
 
+  }
 }
