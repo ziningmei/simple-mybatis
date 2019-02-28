@@ -285,14 +285,6 @@ public class Configuration {
         resultMaps.put(rm.getId(), rm);
     }
 
-    public boolean hasResultMap(String id) {
-        return resultMaps.containsKey(id);
-    }
-
-    public ParameterMap getParameterMap(String id) {
-        return parameterMaps.get(id);
-    }
-
     public void addMappedStatement(MappedStatement ms) {
         mappedStatements.put(ms.getId(), ms);
     }
@@ -337,13 +329,6 @@ public class Configuration {
     }
 
     public MappedStatement getMappedStatement(String id) {
-        return this.getMappedStatement(id, true);
-    }
-
-    public MappedStatement getMappedStatement(String id, boolean validateIncompleteStatements) {
-        if (validateIncompleteStatements) {
-            buildAllStatements();
-        }
         return mappedStatements.get(id);
     }
 

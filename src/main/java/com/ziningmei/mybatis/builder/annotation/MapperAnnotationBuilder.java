@@ -8,7 +8,6 @@ import com.ziningmei.mybatis.binding.MapperMethod;
 import com.ziningmei.mybatis.builder.BuilderException;
 import com.ziningmei.mybatis.builder.IncompleteElementException;
 import com.ziningmei.mybatis.builder.MapperBuilderAssistant;
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
 import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
 import com.ziningmei.mybatis.mapping.*;
@@ -94,14 +93,9 @@ public class MapperAnnotationBuilder {
                 }
             }
         }
-        parsePendingMethods();
 
     }
 
-    private void parsePendingMethods() {
-
-
-    }
 
     /**
      * 解析语句
@@ -116,64 +110,65 @@ public class MapperAnnotationBuilder {
         //获取SqlSource
         SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
         if (sqlSource != null) {
+            //语句id
             final String mappedStatementId = type.getName() + "." + method.getName();
+            //获取数量
             Integer fetchSize = null;
+            //超时时间
             Integer timeout = null;
+            //语句类型
             StatementType statementType = StatementType.PREPARED;
+            //结果集类型
             ResultSetType resultSetType = ResultSetType.FORWARD_ONLY;
+            //命令类型 SELECT
             SqlCommandType sqlCommandType = getSqlCommandType(method);
+            //判断类型是不是select
             boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
 
+            //主键生成器
             KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
+            //主键属性
             String keyProperty = null;
+            //主键列
             String keyColumn = null;
 
-
+            //获得 resultMapId 编号字符串
             String resultMapId = null;
             if (isSelect) {
+                //如果是select，需要解析返回值
                 resultMapId = parseResultMap(method);
             }
-
-            assistant.addMappedStatement(
-                    mappedStatementId,
-                    sqlSource,
-                    statementType,
-                    sqlCommandType,
-                    fetchSize,
-                    timeout,
-                    // ParameterMapID
-                    null,
-                    parameterTypeClass,
-                    resultMapId,
-                    getReturnType(method),
-                    resultSetType,
-                    false,
-                    keyGenerator,
-                    keyProperty,
-                    keyColumn,
-                    // DatabaseID
-                    null,
-                    languageDriver,
-                    // ResultSets
-                    null);
+            //添加语句
+            assistant.addMappedStatement(mappedStatementId, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterTypeClass, resultMapId, getReturnType(method), resultSetType, false, keyGenerator, languageDriver);
         }
-
 
     }
 
+    /**
+     * 根据方法获取 resultMapId
+     *
+     * @param method
+     * @return
+     */
     private String parseResultMap(Method method) {
+        //获取返回类型
         Class<?> returnType = getReturnType(method);
+        //生成resultMapId
         String resultMapId = generateResultMapName(method);
-        applyResultMap(resultMapId, returnType);
+        //生成ResultMap对象
+        assistant.addResultMap(resultMapId, returnType, new ArrayList<>(), null);
+        //返回resultMapId
         return resultMapId;
     }
 
-    private void applyResultMap(String resultMapId, Class<?> returnType) {
-        List<ResultMapping> resultMappings = new ArrayList<>();
-
-        assistant.addResultMap(resultMapId, returnType, null, resultMappings, null);
-    }
-
+    /**
+     * 生成resultMapId
+     * <p>
+     * 类名+方法名+参数名（空为void）
+     *
+     * @param method
+     * @return
+     */
     private String generateResultMapName(Method method) {
 
         StringBuilder suffix = new StringBuilder();
@@ -228,8 +223,8 @@ public class MapperAnnotationBuilder {
 
 
     /**
-     *
      * 创建SqlSource
+     *
      * @param strings
      * @param parameterTypeClass
      * @param languageDriver
@@ -273,6 +268,12 @@ public class MapperAnnotationBuilder {
 
     }
 
+    /**
+     * 获取返回类型，比较复杂，暂且忽略
+     *
+     * @param method
+     * @return
+     */
     private Class<?> getReturnType(Method method) {
         Class<?> returnType = method.getReturnType();
         Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, type);
@@ -282,25 +283,6 @@ public class MapperAnnotationBuilder {
                 returnType = returnType.getComponentType();
             }
 
-        } else if (resolvedReturnType instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType) resolvedReturnType;
-            Class<?> rawType = (Class<?>) parameterizedType.getRawType();
-            if (Collection.class.isAssignableFrom(rawType) || Cursor.class.isAssignableFrom(rawType)) {
-                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                if (actualTypeArguments != null && actualTypeArguments.length == 1) {
-                    Type returnTypeParameter = actualTypeArguments[0];
-                    if (returnTypeParameter instanceof Class<?>) {
-                        returnType = (Class<?>) returnTypeParameter;
-                    } else if (returnTypeParameter instanceof ParameterizedType) {
-                        // (gcode issue #443) actual type can be a also a parameterized type
-                        returnType = (Class<?>) ((ParameterizedType) returnTypeParameter).getRawType();
-                    } else if (returnTypeParameter instanceof GenericArrayType) {
-                        Class<?> componentType = (Class<?>) ((GenericArrayType) returnTypeParameter).getGenericComponentType();
-                        // (gcode issue #525) support List<byte[]>
-                        returnType = Array.newInstance(componentType, 0).getClass();
-                    }
-                }
-            }
         }
 
         return returnType;

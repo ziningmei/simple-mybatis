@@ -21,10 +21,6 @@ package com.ziningmei.mybatis.mapping;
 public enum StatementType {
 
   /**
-   * 直接操作语句
-   */
-  STATEMENT,
-  /**
    * 预处理
    */
   PREPARED,

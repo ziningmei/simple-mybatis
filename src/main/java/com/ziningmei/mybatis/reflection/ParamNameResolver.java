@@ -46,7 +46,6 @@ public class ParamNameResolver {
    */
   private final SortedMap<Integer, String> names;
 
-  private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
     final Class<?>[] paramTypes = method.getParameterTypes();
@@ -104,7 +103,7 @@ public class ParamNameResolver {
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {
       return null;
-    } else if (!hasParamAnnotation && paramCount == 1) {
+    } else if (paramCount == 1) {
       return args[names.firstKey()];
     } else {
       final Map<String, Object> param = new MapperMethod.ParamMap<>();

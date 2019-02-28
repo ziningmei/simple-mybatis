@@ -16,9 +16,7 @@
 package com.ziningmei.mybatis.executor.statement;
 
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.executor.Executor;
-import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.session.ResultHandler;
@@ -36,35 +34,12 @@ public class PreparedStatementHandler extends BaseStatementHandler {
         super(executor, mappedStatement, parameter, rowBounds, resultHandler, boundSql);
     }
 
-    @Override
-    public int update(Statement statement) throws SQLException {
-        PreparedStatement ps = (PreparedStatement) statement;
-        ps.execute();
-        int rows = ps.getUpdateCount();
-        Object parameterObject = boundSql.getParameterObject();
-        KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
-        keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);
-        return rows;
-    }
-
-    @Override
-    public void batch(Statement statement) throws SQLException {
-        PreparedStatement ps = (PreparedStatement) statement;
-        ps.addBatch();
-    }
 
     @Override
     public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
         PreparedStatement ps = (PreparedStatement) statement;
         ps.execute();
-        return resultSetHandler.<E>handleResultSets(ps);
-    }
-
-    @Override
-    public <E> Cursor<E> queryCursor(Statement statement) throws SQLException {
-        PreparedStatement ps = (PreparedStatement) statement;
-        ps.execute();
-        return resultSetHandler.<E>handleCursorResultSets(ps);
+        return resultSetHandler.handleResultSets(ps);
     }
 
     @Override

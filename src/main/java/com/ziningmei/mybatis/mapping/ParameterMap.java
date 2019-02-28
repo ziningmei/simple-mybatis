@@ -16,9 +16,6 @@
 package com.ziningmei.mybatis.mapping;
 
 
-import com.ziningmei.mybatis.session.Configuration;
-
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,7 +25,10 @@ public class ParameterMap {
 
   private String id;
   private Class<?> type;
+
   private List<ParameterMapping> parameterMappings;
+
+
 
   private ParameterMap() {
   }
@@ -36,10 +36,9 @@ public class ParameterMap {
   public static class Builder {
     private ParameterMap parameterMap = new ParameterMap();
 
-    public Builder(Configuration configuration, String id, Class<?> type, List<ParameterMapping> parameterMappings) {
+    public Builder(String id, Class<?> type) {
       parameterMap.id = id;
       parameterMap.type = type;
-      parameterMap.parameterMappings = parameterMappings;
     }
 
     public Class<?> type() {
@@ -48,7 +47,6 @@ public class ParameterMap {
 
     public ParameterMap build() {
       //lock down collections
-      parameterMap.parameterMappings = Collections.unmodifiableList(parameterMap.parameterMappings);
       return parameterMap;
     }
   }
@@ -61,8 +59,8 @@ public class ParameterMap {
     return type;
   }
 
+
   public List<ParameterMapping> getParameterMappings() {
     return parameterMappings;
   }
-
 }

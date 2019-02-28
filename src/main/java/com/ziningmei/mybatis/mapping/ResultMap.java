@@ -49,10 +49,6 @@ public class ResultMap {
 
     private ResultMap resultMap = new ResultMap();
 
-    public Builder(Configuration configuration, String id, Class<?> type, List<ResultMapping> resultMappings) {
-      this(configuration, id, type, resultMappings, null);
-    }
-
     public Builder(Configuration configuration, String id, Class<?> type, List<ResultMapping> resultMappings, Boolean autoMapping) {
       resultMap.configuration = configuration;
       resultMap.id = id;
@@ -175,14 +171,6 @@ public class ResultMap {
     return id;
   }
 
-  public boolean hasNestedResultMaps() {
-    return hasNestedResultMaps;
-  }
-
-  public boolean hasNestedQueries() {
-    return hasNestedQueries;
-  }
-
   public Class<?> getType() {
     return type;
   }
@@ -211,10 +199,7 @@ public class ResultMap {
     return mappedProperties;
   }
 
-  public void forceNestedResultMaps() {
-    hasNestedResultMaps = true;
-  }
-  
+
   public Boolean getAutoMapping() {
     return autoMapping;
   }

@@ -91,12 +91,9 @@ public class ResultLoader {
       throw new ExecutorException("ResultLoader could not load lazily.  DataSource was not configured.");
     }
     final TransactionFactory transactionFactory = environment.getTransactionFactory();
-    final Transaction tx = transactionFactory.newTransaction(ds, null, false);
+    final Transaction tx = transactionFactory.newTransaction(ds, null);
     return configuration.newExecutor(tx);
   }
 
-  public boolean wasNull() {
-    return resultObject == null;
-  }
 
 }

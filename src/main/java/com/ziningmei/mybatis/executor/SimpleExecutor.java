@@ -15,7 +15,6 @@
  */
 package com.ziningmei.mybatis.executor;
 
-import com.ziningmei.mybatis.logging.Log;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.session.Configuration;
@@ -31,6 +30,8 @@ import java.util.List;
 
 /**
  * @author Clinton Begin
+ *
+ * 简单执行器
  */
 public class SimpleExecutor extends BaseExecutor {
 
@@ -44,21 +45,21 @@ public class SimpleExecutor extends BaseExecutor {
     try {
       Configuration configuration = ms.getConfiguration();
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
-      stmt = prepareStatement(handler, ms.getStatementLog());
-      return handler.<E>query(stmt, resultHandler);
+      stmt = prepareStatement(handler);
+      return handler.query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
     }
   }
 
   @Override
-  public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
+  public List<BatchResult> doFlushStatements(boolean isRollback) {
     return Collections.emptyList();
   }
 
-  private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
+  private Statement prepareStatement(StatementHandler handler) throws SQLException {
     Statement stmt;
-    Connection connection = getConnection(statementLog);
+    Connection connection =  transaction.getConnection();
     stmt = handler.prepare(connection, transaction.getTimeout());
     handler.parameterize(stmt);
     return stmt;

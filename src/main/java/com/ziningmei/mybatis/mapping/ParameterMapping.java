@@ -28,13 +28,36 @@ import com.ziningmei.mybatis.type.TypeHandlerRegistry;
  */
 public class ParameterMapping {
 
+    /**
+     * 配置，一般都有这个，工具类
+     */
     private Configuration configuration;
 
+    /**
+     * 属性名称
+     */
     private String property;
+
+    /**
+     * 参数类型
+     */
     private ParameterMode mode;
+
+    /**
+     * java类型
+     */
     private Class<?> javaType = Object.class;
+
+    /**
+     * jdbcType
+     */
     private JdbcType jdbcType;
+
+    /**
+     * 类型处理器
+     */
     private TypeHandler<?> typeHandler;
+
 
     private ParameterMapping() {
     }
@@ -60,6 +83,10 @@ public class ParameterMapping {
          * @return
          */
         public ParameterMapping build() {
+
+            /**
+             * 设置类型处理器
+             */
             resolveTypeHandler();
 
             //如果没有类型解析器，报错

@@ -15,7 +15,6 @@
  */
 package com.ziningmei.mybatis.executor;
 
-import com.ziningmei.mybatis.logging.ConnectionLogger;
 import com.ziningmei.mybatis.logging.Log;
 import com.ziningmei.mybatis.logging.LogFactory;
 import com.ziningmei.mybatis.mapping.BoundSql;
@@ -25,7 +24,6 @@ import com.ziningmei.mybatis.session.ResultHandler;
 import com.ziningmei.mybatis.session.RowBounds;
 import com.ziningmei.mybatis.transaction.Transaction;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -92,7 +90,6 @@ public abstract class BaseExecutor implements Executor {
     }
 
     /**
-     * 错误上下文工具类
      *
      * @param ms
      * @param parameter
@@ -129,7 +126,7 @@ public abstract class BaseExecutor implements Executor {
     }
 
     @Override
-    public List<BatchResult> flushStatements()throws SQLException{
+    public List<BatchResult> flushStatements() throws SQLException {
         if (closed) {
             throw new ExecutorException("Executor was closed.");
         }
@@ -168,18 +165,6 @@ public abstract class BaseExecutor implements Executor {
         }
     }
 
-    /**
-     * Apply a transaction timeout.
-     *
-     * @param statement a current statement
-     * @throws SQLException if a database access error occurs, this method is called on a closed <code>Statement</code>
-     * @see StatementUtil#applyTransactionTimeout(Statement, Integer, Integer)
-     * @since 3.4.0
-     */
-    protected void applyTransactionTimeout(Statement statement) throws SQLException {
-        StatementUtil.applyTransactionTimeout(statement, statement.getQueryTimeout(), transaction.getTimeout());
-    }
-
     private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
         List<E> list;
         try {
@@ -188,15 +173,6 @@ public abstract class BaseExecutor implements Executor {
 
         }
         return list;
-    }
-
-    protected Connection getConnection(Log statementLog) throws SQLException {
-        Connection connection = transaction.getConnection();
-        if (statementLog.isDebugEnabled()) {
-            return ConnectionLogger.newInstance(connection, statementLog, queryStack);
-        } else {
-            return connection;
-        }
     }
 
 }

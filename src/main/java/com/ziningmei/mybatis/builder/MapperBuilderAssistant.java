@@ -6,13 +6,12 @@ import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * mapper初始化帮助类
  */
-public class MapperBuilderAssistant extends BaseBuilder{
+public class MapperBuilderAssistant extends BaseBuilder {
 
     private String currentNamespace;
 
@@ -20,7 +19,7 @@ public class MapperBuilderAssistant extends BaseBuilder{
 
     public MapperBuilderAssistant(Configuration configuration, String resource) {
         super(configuration);
-        this.resource=resource;
+        this.resource = resource;
     }
 
     public void setCurrentNamespace(String currentNamespace) {
@@ -51,41 +50,36 @@ public class MapperBuilderAssistant extends BaseBuilder{
             SqlCommandType sqlCommandType,
             Integer fetchSize,
             Integer timeout,
-            String parameterMap,
             Class<?> parameterType,
             String resultMap,
             Class<?> resultType,
             ResultSetType resultSetType,
             boolean resultOrdered,
             KeyGenerator keyGenerator,
-            String keyProperty,
-            String keyColumn,
-            String databaseId,
-            LanguageDriver lang,
-            String resultSets) {
+            LanguageDriver lang) {
 
+        //获取命名空间
         id = applyCurrentNamespace(id, false);
 
+        //创建MappedStatement构造器
         MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlSource, sqlCommandType)
                 .resource(resource)
                 .fetchSize(fetchSize)
                 .timeout(timeout)
                 .statementType(statementType)
                 .keyGenerator(keyGenerator)
-                .keyProperty(keyProperty)
-                .keyColumn(keyColumn)
-                .databaseId(databaseId)
                 .lang(lang)
                 .resultOrdered(resultOrdered)
-                .resultSets(resultSets)
                 .resultMaps(getStatementResultMaps(resultMap, resultType, id))
                 .resultSetType(resultSetType);
 
-        ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
+        //创建ParameterMap
+        ParameterMap statementParameterMap = getStatementParameterMap(parameterType, id);
         if (statementParameterMap != null) {
+            //将参数map放到创建MappedStatement里面去
             statementBuilder.parameterMap(statementParameterMap);
         }
-
+        //创建MappedStatement
         MappedStatement statement = statementBuilder.build();
         configuration.addMappedStatement(statement);
         return statement;
@@ -140,66 +134,33 @@ public class MapperBuilderAssistant extends BaseBuilder{
         return resultMaps;
     }
 
+    /**
+     * 获取StatementParameterMap
+     * @param parameterTypeClass
+     * @param statementId
+     * @return
+     */
     private ParameterMap getStatementParameterMap(
-            String parameterMapName,
             Class<?> parameterTypeClass,
             String statementId) {
-        parameterMapName = applyCurrentNamespace(parameterMapName, true);
+
         ParameterMap parameterMap = null;
-        if (parameterMapName != null) {
-            try {
-                parameterMap = configuration.getParameterMap(parameterMapName);
-            } catch (IllegalArgumentException e) {
-                throw new IncompleteElementException("Could not find parameter map " + parameterMapName, e);
-            }
-        } else if (parameterTypeClass != null) {
-            List<ParameterMapping> parameterMappings = new ArrayList<>();
+
+        //如果参数类型不为空，创建ParameterMap
+        if (parameterTypeClass != null) {
             parameterMap = new ParameterMap.Builder(
-                    configuration,
                     statementId + "-Inline",
-                    parameterTypeClass,
-                    parameterMappings).build();
+                    parameterTypeClass).build();
         }
         return parameterMap;
     }
 
-    public ResultMap addResultMap(
-            String id,
-            Class<?> type,
-            String extend,
-            List<ResultMapping> resultMappings,
-            Boolean autoMapping) {
+    public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings, Boolean autoMapping) {
         id = applyCurrentNamespace(id, false);
-        extend = applyCurrentNamespace(extend, true);
-
-        if (extend != null) {
-            if (!configuration.hasResultMap(extend)) {
-                throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
-            }
-            ResultMap resultMap = configuration.getResultMap(extend);
-            List<ResultMapping> extendedResultMappings = new ArrayList<>(resultMap.getResultMappings());
-            extendedResultMappings.removeAll(resultMappings);
-            // Remove parent constructor if this resultMap declares a constructor.
-            boolean declaresConstructor = false;
-            for (ResultMapping resultMapping : resultMappings) {
-                if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
-                    declaresConstructor = true;
-                    break;
-                }
-            }
-            if (declaresConstructor) {
-                Iterator<ResultMapping> extendedResultMappingsIter = extendedResultMappings.iterator();
-                while (extendedResultMappingsIter.hasNext()) {
-                    if (extendedResultMappingsIter.next().getFlags().contains(ResultFlag.CONSTRUCTOR)) {
-                        extendedResultMappingsIter.remove();
-                    }
-                }
-            }
-            resultMappings.addAll(extendedResultMappings);
-        }
+        //创建ResultMap
         ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
                 .build();
-
+        //添加到configuration
         configuration.addResultMap(resultMap);
         return resultMap;
     }

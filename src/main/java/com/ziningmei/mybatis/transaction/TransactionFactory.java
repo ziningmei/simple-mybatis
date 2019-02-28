@@ -25,5 +25,5 @@ public interface TransactionFactory {
      * @param autoCommit
      * @return
      */
-    Transaction newTransaction(DataSource ds, TransactionIsolationLevel level, boolean autoCommit);
+    Transaction newTransaction(DataSource ds, TransactionIsolationLevel level);
 }

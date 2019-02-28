@@ -17,8 +17,6 @@ package com.ziningmei.mybatis.mapping;
 
 import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
 import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
-import com.ziningmei.mybatis.logging.Log;
-import com.ziningmei.mybatis.logging.LogFactory;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 
@@ -29,30 +27,81 @@ import java.util.List;
 /**
  * @author Clinton Begin
  *
+ * 映射声明
  *
  */
 public final class MappedStatement {
 
+  /**
+   * 资源
+   */
   private String resource;
+
+  /**
+   * 配置
+   */
   private Configuration configuration;
+
+  /**
+   * id
+   */
   private String id;
+
+  /**
+   * 获取数量
+   */
   private Integer fetchSize;
+
+  /**
+   * 超时时间
+   */
   private Integer timeout;
+
+  /**
+   * 声明类型
+   */
   private StatementType statementType;
+
+  /**
+   * 返回值类型
+   */
   private ResultSetType resultSetType;
+
+  /**
+   * SqlSource
+   */
   private SqlSource sqlSource;
+  /**
+   *
+   * 参数mao
+   */
   private ParameterMap parameterMap;
+
+  /**
+   * 返回map
+   */
   private List<ResultMap> resultMaps;
+
+  /**
+   * 是否排序
+   */
   private boolean resultOrdered;
+
+  /**
+   * sql类型
+   */
   private SqlCommandType sqlCommandType;
+
+  /**
+   * 主键生成器
+   */
   private com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator;
-  private String[] keyProperties;
-  private String[] keyColumns;
-  private boolean hasNestedResultMaps;
-  private String databaseId;
-  private Log statementLog;
+
+  /**
+   * 语言驱动
+   */
   private LanguageDriver lang;
-  private String[] resultSets;
+
 
   MappedStatement() {
     // constructor disabled
@@ -66,16 +115,11 @@ public final class MappedStatement {
       mappedStatement.id = id;
       mappedStatement.sqlSource = sqlSource;
       mappedStatement.statementType = StatementType.PREPARED;
-      mappedStatement.parameterMap = new ParameterMap.Builder(configuration, "defaultParameterMap", null, new ArrayList<>()).build();
+      mappedStatement.parameterMap = new ParameterMap.Builder("defaultParameterMap", null).build();
       mappedStatement.resultMaps = new ArrayList<>();
       mappedStatement.sqlCommandType = sqlCommandType;
       mappedStatement.keyGenerator = NoKeyGenerator.INSTANCE;
-      String logId = id;
-//      if (configuration.getLogPrefix() != null) {
-//        logId = configuration.getLogPrefix() + id;
-//      }
-      mappedStatement.statementLog = LogFactory.getLog(logId);
-      //mappedStatement.lang = configuration.getDefaultScriptingLanguageInstance();
+
     }
 
     public Builder resource(String resource) {
@@ -94,9 +138,6 @@ public final class MappedStatement {
 
     public Builder resultMaps(List<ResultMap> resultMaps) {
       mappedStatement.resultMaps = resultMaps;
-      for (ResultMap resultMap : resultMaps) {
-        mappedStatement.hasNestedResultMaps = mappedStatement.hasNestedResultMaps || resultMap.hasNestedResultMaps();
-      }
       return this;
     }
 
@@ -130,35 +171,8 @@ public final class MappedStatement {
       return this;
     }
 
-    public Builder keyProperty(String keyProperty) {
-      mappedStatement.keyProperties = delimitedStringToArray(keyProperty);
-      return this;
-    }
-
-    public Builder keyColumn(String keyColumn) {
-      mappedStatement.keyColumns = delimitedStringToArray(keyColumn);
-      return this;
-    }
-
-    public Builder databaseId(String databaseId) {
-      mappedStatement.databaseId = databaseId;
-      return this;
-    }
-
     public Builder lang(LanguageDriver driver) {
       mappedStatement.lang = driver;
-      return this;
-    }
-
-    public Builder resultSets(String resultSet) {
-      mappedStatement.resultSets = delimitedStringToArray(resultSet);
-      return this;
-    }
-
-    /** @deprecated Use {@link #resultSets} */
-    @Deprecated
-    public Builder resulSets(String resultSet) {
-      mappedStatement.resultSets = delimitedStringToArray(resultSet);
       return this;
     }
     
@@ -190,10 +204,6 @@ public final class MappedStatement {
 
   public String getId() {
     return id;
-  }
-
-  public boolean hasNestedResultMaps() {
-    return hasNestedResultMaps;
   }
 
   public Integer getFetchSize() {
@@ -228,63 +238,18 @@ public final class MappedStatement {
     return resultOrdered;
   }
 
-  public String getDatabaseId() {
-    return databaseId;
-  }
-
-  public String[] getKeyProperties() {
-    return keyProperties;
-  }
-
-  public String[] getKeyColumns() {
-    return keyColumns;
-  }
-
-  public Log getStatementLog() {
-    return statementLog;
-  }
-
   public LanguageDriver getLang() {
     return lang;
-  }
-
-  public String[] getResultSets() {
-    return resultSets;
-  }
-
-  /** @deprecated Use {@link #getResultSets()} */
-  @Deprecated
-  public String[] getResulSets() {
-    return resultSets;
   }
   
   public BoundSql getBoundSql(Object parameterObject) {
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
-      boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
-    }
-
-    // check for nested result maps in parameter mappings (issue #30)
-    for (ParameterMapping pm : boundSql.getParameterMappings()) {
-      String rmId = pm.getResultMapId();
-      if (rmId != null) {
-        ResultMap rm = configuration.getResultMap(rmId);
-        if (rm != null) {
-          hasNestedResultMaps |= rm.hasNestedResultMaps();
-        }
-      }
+      boundSql = new BoundSql(configuration, boundSql.getSql(),parameterMap.getParameterMappings(),parameterObject);
     }
 
     return boundSql;
-  }
-
-  private static String[] delimitedStringToArray(String in) {
-    if (in == null || in.trim().length() == 0) {
-      return null;
-    } else {
-      return in.split(",");
-    }
   }
 
 }

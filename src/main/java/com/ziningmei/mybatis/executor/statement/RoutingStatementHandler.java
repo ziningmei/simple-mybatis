@@ -15,7 +15,6 @@
  */
 package com.ziningmei.mybatis.executor.statement;
 
-import com.ziningmei.mybatis.cursor.Cursor;
 import com.ziningmei.mybatis.executor.Executor;
 import com.ziningmei.mybatis.executor.ExecutorException;
 import com.ziningmei.mybatis.executor.StatementHandler;
@@ -40,9 +39,6 @@ public class RoutingStatementHandler implements StatementHandler {
   public RoutingStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
 
     switch (ms.getStatementType()) {
-      case STATEMENT:
-        delegate = new SimpleStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
-        break;
       case PREPARED:
         delegate = new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
         break;
@@ -63,24 +59,10 @@ public class RoutingStatementHandler implements StatementHandler {
   }
 
   @Override
-  public void batch(Statement statement) throws SQLException {
-    delegate.batch(statement);
-  }
-
-  @Override
-  public int update(Statement statement) throws SQLException {
-    return delegate.update(statement);
-  }
-
-  @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
-    return delegate.<E>query(statement, resultHandler);
+    return delegate.query(statement, resultHandler);
   }
 
-  @Override
-  public <E> Cursor<E> queryCursor(Statement statement) throws SQLException {
-    return delegate.queryCursor(statement);
-  }
 
   @Override
   public BoundSql getBoundSql() {

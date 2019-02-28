@@ -21,9 +21,10 @@ import java.sql.ResultSet;
  * @author Clinton Begin
  */
 public enum ResultSetType {
-  FORWARD_ONLY(ResultSet.TYPE_FORWARD_ONLY),
-  SCROLL_INSENSITIVE(ResultSet.TYPE_SCROLL_INSENSITIVE),
-  SCROLL_SENSITIVE(ResultSet.TYPE_SCROLL_SENSITIVE);
+  /**
+   *  结果集的游标只能向下滚动
+   */
+  FORWARD_ONLY(ResultSet.TYPE_FORWARD_ONLY);
 
   private final int value;
 
