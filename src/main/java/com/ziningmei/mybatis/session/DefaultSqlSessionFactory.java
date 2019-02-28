@@ -35,6 +35,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
     @Override
     public SqlSession openSession() {
+        //通过数据源获取sqlsession
         return openSessionFromDataSource();
     }
 

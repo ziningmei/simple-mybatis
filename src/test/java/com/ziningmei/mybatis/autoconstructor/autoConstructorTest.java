@@ -20,11 +20,13 @@ public class autoConstructorTest {
     @BeforeClass
     public static void setUp() throws Exception {
         // create a SqlSessionFactory
+        // 创建SqlSessionFactory，核心
         try (Reader reader = Resources.getResourceAsReader("com/ziningmei/mybatis/autoconstructor/mybatis-config.xml")) {
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
         }
 
         // populate in-memory database
+        // 使用内存数据库进行测试，执行脚本，导入数据库
         BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
                 "com/ziningmei/mybatis/autoconstructor/CreateDB.sql");
     }
@@ -34,7 +36,7 @@ public class autoConstructorTest {
     public void fullyPopulatedSubject() {
         try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
             final AutoConstructorMapper mapper = sqlSession.getMapper(AutoConstructorMapper.class);
-            final Object subject = mapper.getSubject(1);
+            final PrimitiveSubject subject = mapper.getSubject(1);
             assertNotNull(subject);
         }
     }

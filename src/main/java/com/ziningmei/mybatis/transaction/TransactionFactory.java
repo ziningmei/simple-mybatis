@@ -22,7 +22,6 @@ public interface TransactionFactory {
      * 创建事务
      * @param ds
      * @param level
-     * @param autoCommit
      * @return
      */
     Transaction newTransaction(DataSource ds, TransactionIsolationLevel level);

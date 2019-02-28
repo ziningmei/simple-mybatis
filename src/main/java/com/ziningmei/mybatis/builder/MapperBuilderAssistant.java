@@ -1,6 +1,5 @@
 package com.ziningmei.mybatis.builder;
 
-import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
 import com.ziningmei.mybatis.mapping.*;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
@@ -55,7 +54,6 @@ public class MapperBuilderAssistant extends BaseBuilder {
             Class<?> resultType,
             ResultSetType resultSetType,
             boolean resultOrdered,
-            KeyGenerator keyGenerator,
             LanguageDriver lang) {
 
         //获取命名空间
@@ -67,7 +65,6 @@ public class MapperBuilderAssistant extends BaseBuilder {
                 .fetchSize(fetchSize)
                 .timeout(timeout)
                 .statementType(statementType)
-                .keyGenerator(keyGenerator)
                 .lang(lang)
                 .resultOrdered(resultOrdered)
                 .resultMaps(getStatementResultMaps(resultMap, resultType, id))
@@ -81,6 +78,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
         }
         //创建MappedStatement
         MappedStatement statement = statementBuilder.build();
+
+        //添加到configuration里面
         configuration.addMappedStatement(statement);
         return statement;
     }

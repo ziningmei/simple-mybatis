@@ -12,8 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MapperProxyFactory<T> {
 
+    /**
+     * mapper接口
+     */
     private final Class<T> mapperInterface;
 
+    /**
+     * 方法缓存
+     */
     private final Map<Method, MapperMethod> methodCache = new ConcurrentHashMap<>();
 
 

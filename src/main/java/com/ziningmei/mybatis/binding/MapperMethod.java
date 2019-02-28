@@ -17,26 +17,20 @@ package com.ziningmei.mybatis.binding;
 
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.mapping.SqlCommandType;
-import com.ziningmei.mybatis.reflection.MetaObject;
 import com.ziningmei.mybatis.reflection.ParamNameResolver;
 import com.ziningmei.mybatis.reflection.TypeParameterResolver;
 import com.ziningmei.mybatis.session.Configuration;
-import com.ziningmei.mybatis.session.ResultHandler;
 import com.ziningmei.mybatis.session.RowBounds;
 import com.ziningmei.mybatis.session.SqlSession;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 /**
- *
  * 映射方法
- *
  */
 public class MapperMethod {
 
@@ -77,6 +71,7 @@ public class MapperMethod {
 
     /**
      * 执行sql
+     *
      * @param sqlSession
      * @param args
      * @return
@@ -85,12 +80,12 @@ public class MapperMethod {
         Object result;
         switch (command.getType()) {
             case SELECT:
-                    Object param = method.convertArgsToSqlCommandParam(args);
-                    result = sqlSession.selectOne(command.getName(), param);
-                    if (method.returnsOptional() &&
-                            (result == null || !method.getReturnType().equals(result.getClass()))) {
-                        result = Optional.ofNullable(result);
-                    }
+                Object param = method.convertArgsToSqlCommandParam(args);
+                result = sqlSession.selectOne(command.getName(), param);
+                if (method.returnsOptional() &&
+                        (result == null || !method.getReturnType().equals(result.getClass()))) {
+                    result = Optional.ofNullable(result);
+                }
                 break;
 
             default:
@@ -103,26 +98,6 @@ public class MapperMethod {
         return result;
     }
 
-    private <E> Object convertToDeclaredCollection(Configuration config, List<E> list) {
-        Object collection = config.getObjectFactory().create(method.getReturnType());
-        MetaObject metaObject = config.newMetaObject(collection);
-        metaObject.addAll(list);
-        return collection;
-    }
-
-    private <E> Object convertToArray(List<E> list) {
-        Class<?> arrayComponentType = method.getReturnType().getComponentType();
-        Object array = Array.newInstance(arrayComponentType, list.size());
-        if (arrayComponentType.isPrimitive()) {
-            for (int i = 0; i < list.size(); i++) {
-                Array.set(array, i, list.get(i));
-            }
-            return array;
-        } else {
-            return list.toArray((E[]) array);
-        }
-    }
-
     public static class SqlCommand {
 
         private final String name;
@@ -130,9 +105,7 @@ public class MapperMethod {
 
         public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
             final String methodName = method.getName();
-            final Class<?> declaringClass = method.getDeclaringClass();
-            MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
-                    configuration);
+            MappedStatement ms = resolveMappedStatement(mapperInterface, methodName,configuration);
             if (ms == null) {
 
                 throw new BindingException("Invalid bound statement (not found): "
@@ -155,24 +128,12 @@ public class MapperMethod {
             return name;
         }
 
-        private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
-                                                       Class<?> declaringClass, Configuration configuration) {
+        private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName, Configuration configuration) {
+
             String statementId = mapperInterface.getName() + "." + methodName;
-            if (configuration.hasStatement(statementId)) {
-                return configuration.getMappedStatement(statementId);
-            } else if (mapperInterface.equals(declaringClass)) {
-                return null;
-            }
-            for (Class<?> superInterface : mapperInterface.getInterfaces()) {
-                if (declaringClass.isAssignableFrom(superInterface)) {
-                    MappedStatement ms = resolveMappedStatement(superInterface, methodName,
-                            declaringClass, configuration);
-                    if (ms != null) {
-                        return ms;
-                    }
-                }
-            }
-            return null;
+
+            return configuration.getMappedStatement(statementId);
+
         }
     }
 
@@ -181,8 +142,6 @@ public class MapperMethod {
         private final boolean returnsVoid;
         private final boolean returnsOptional;
         private final Class<?> returnType;
-        private final String mapKey;
-        private final Integer resultHandlerIndex;
         private final Integer rowBoundsIndex;
         private final ParamNameResolver paramNameResolver;
 
@@ -197,18 +156,12 @@ public class MapperMethod {
             }
             this.returnsVoid = void.class.equals(this.returnType);
             this.returnsOptional = Optional.class.equals(this.returnType);
-            this.mapKey = getMapKey(method);
             this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
-            this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
             this.paramNameResolver = new ParamNameResolver(configuration, method);
         }
 
         public Object convertArgsToSqlCommandParam(Object[] args) {
             return paramNameResolver.getNamedParams(args);
-        }
-
-        public boolean hasRowBounds() {
-            return rowBoundsIndex != null;
         }
 
         public Class<?> getReturnType() {
@@ -245,10 +198,6 @@ public class MapperMethod {
             return index;
         }
 
-        private String getMapKey(Method method) {
-
-            return null;
-        }
     }
 
 }

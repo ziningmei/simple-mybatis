@@ -95,5 +95,8 @@ public class ResultLoader {
     return configuration.newExecutor(tx);
   }
 
+  public boolean wasNull() {
+    return resultObject == null;
+  }
 
 }

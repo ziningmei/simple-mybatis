@@ -1,6 +1,6 @@
 package com.ziningmei.mybatis.binding;
 
-import com.ziningmei.mybatis.builder.annotation.MapperAnnotationBuilder;
+import com.ziningmei.mybatis.builder.MapperAnnotationBuilder;
 import com.ziningmei.mybatis.session.Configuration;
 import com.ziningmei.mybatis.session.SqlSession;
 
@@ -64,6 +64,13 @@ public class MapperRegistry {
         }
     }
 
+    /**
+     * 获取mapper代理
+     * @param type
+     * @param sqlSession
+     * @param <T>
+     * @return
+     */
     public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
         //获得 MapperProxyFactory 对象
         final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);

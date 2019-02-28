@@ -16,8 +16,7 @@
 package com.ziningmei.mybatis.executor.statement;
 
 import com.ziningmei.mybatis.executor.*;
-import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
-import com.ziningmei.mybatis.executor.parameter.ParameterHandler;
+import com.ziningmei.mybatis.executor.ParameterHandler;
 import com.ziningmei.mybatis.executor.resultSet.ResultSetHandler;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
@@ -134,10 +133,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
   }
 
   protected void generateKeys(Object parameter) {
-    KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
-    ErrorContext.instance().store();
-    keyGenerator.processBefore(executor, mappedStatement, null, parameter);
-    ErrorContext.instance().recall();
+
   }
 
 }

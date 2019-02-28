@@ -15,8 +15,6 @@
  */
 package com.ziningmei.mybatis.mapping;
 
-import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
-import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 
@@ -93,11 +91,6 @@ public final class MappedStatement {
   private SqlCommandType sqlCommandType;
 
   /**
-   * 主键生成器
-   */
-  private com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator;
-
-  /**
    * 语言驱动
    */
   private LanguageDriver lang;
@@ -118,7 +111,6 @@ public final class MappedStatement {
       mappedStatement.parameterMap = new ParameterMap.Builder("defaultParameterMap", null).build();
       mappedStatement.resultMaps = new ArrayList<>();
       mappedStatement.sqlCommandType = sqlCommandType;
-      mappedStatement.keyGenerator = NoKeyGenerator.INSTANCE;
 
     }
 
@@ -166,10 +158,6 @@ public final class MappedStatement {
       return this;
     }
 
-    public Builder keyGenerator(com.ziningmei.mybatis.executor.keygen.KeyGenerator keyGenerator) {
-      mappedStatement.keyGenerator = keyGenerator;
-      return this;
-    }
 
     public Builder lang(LanguageDriver driver) {
       mappedStatement.lang = driver;
@@ -184,10 +172,6 @@ public final class MappedStatement {
       mappedStatement.resultMaps = Collections.unmodifiableList(mappedStatement.resultMaps);
       return mappedStatement;
     }
-  }
-
-  public KeyGenerator getKeyGenerator() {
-    return keyGenerator;
   }
 
   public SqlCommandType getSqlCommandType() {

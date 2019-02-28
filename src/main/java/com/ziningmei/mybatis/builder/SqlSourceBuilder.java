@@ -15,8 +15,6 @@ import java.util.Map;
 
 public class SqlSourceBuilder extends BaseBuilder {
 
-    private static final String parameterProperties = "javaType,jdbcType,mode,numericScale,resultMap,typeHandler,jdbcTypeName";
-
 
     /**
      * 类型处理

@@ -17,11 +17,7 @@ package com.ziningmei.mybatis.executor.resultSet;
 
 
 import com.ziningmei.mybatis.binding.MapperMethod;
-import com.ziningmei.mybatis.executor.ErrorContext;
-import com.ziningmei.mybatis.executor.Executor;
-import com.ziningmei.mybatis.executor.ExecutorException;
-import com.ziningmei.mybatis.executor.parameter.ParameterHandler;
-import com.ziningmei.mybatis.executor.result.ResultMapException;
+import com.ziningmei.mybatis.executor.*;
 import com.ziningmei.mybatis.loader.ResultLoader;
 import com.ziningmei.mybatis.loader.ResultLoaderMap;
 import com.ziningmei.mybatis.mapping.BoundSql;

@@ -18,7 +18,7 @@ package com.ziningmei.mybatis.executor.statement;
 import com.ziningmei.mybatis.executor.Executor;
 import com.ziningmei.mybatis.executor.ExecutorException;
 import com.ziningmei.mybatis.executor.StatementHandler;
-import com.ziningmei.mybatis.executor.parameter.ParameterHandler;
+import com.ziningmei.mybatis.executor.ParameterHandler;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.session.ResultHandler;

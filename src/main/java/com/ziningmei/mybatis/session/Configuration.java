@@ -2,12 +2,11 @@ package com.ziningmei.mybatis.session;
 
 import com.ziningmei.mybatis.binding.MapperRegistry;
 import com.ziningmei.mybatis.builder.ResultMapResolver;
-import com.ziningmei.mybatis.builder.annotation.MethodResolver;
 import com.ziningmei.mybatis.datasource.UnpooledDataSourceFactory;
 import com.ziningmei.mybatis.executor.Executor;
 import com.ziningmei.mybatis.executor.SimpleExecutor;
 import com.ziningmei.mybatis.executor.StatementHandler;
-import com.ziningmei.mybatis.executor.parameter.ParameterHandler;
+import com.ziningmei.mybatis.executor.ParameterHandler;
 import com.ziningmei.mybatis.executor.resultSet.DefaultResultSetHandler;
 import com.ziningmei.mybatis.executor.resultSet.ResultSetHandler;
 import com.ziningmei.mybatis.executor.statement.RoutingStatementHandler;
@@ -96,11 +95,6 @@ public class Configuration {
      * 映射map
      */
     protected final Map<String, MappedStatement> mappedStatements = new StrictMap<>("Mapped Statements collection");
-
-    /**
-     * 默认执行类型
-     */
-    protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
 
     /**
      * 未完成的结果map
@@ -200,14 +194,6 @@ public class Configuration {
         mapperRegistry.addMapper(boundType);
     }
 
-    public void addIncompleteMethod(MethodResolver methodResolver) {
-
-    }
-
-    public MapperRegistry getMapperRegistry() {
-        return mapperRegistry;
-    }
-
     protected static class StrictMap<V> extends HashMap<String, V> {
 
         private static final long serialVersionUID = -4950446264854982944L;
@@ -293,9 +279,6 @@ public class Configuration {
         return reflectorFactory;
     }
 
-    public ExecutorType getDefaultExecutorType() {
-        return defaultExecutorType;
-    }
 
     public Executor newExecutor(Transaction transaction) {
 
@@ -332,7 +315,15 @@ public class Configuration {
         return mappedStatements.get(id);
     }
 
+    /**
+     * 获取mapper
+     * @param type
+     * @param sqlSession
+     * @param <T>
+     * @return
+     */
     public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+        //从mapper注册器中获得
         return mapperRegistry.getMapper(type, sqlSession);
     }
 

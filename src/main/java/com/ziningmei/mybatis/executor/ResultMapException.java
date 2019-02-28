@@ -13,21 +13,29 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.ziningmei.mybatis.executor.parameter;
+package com.ziningmei.mybatis.executor;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+
+import com.ziningmei.mybatis.exception.PersistenceException;
 
 /**
- * A parameter handler sets the parameters of the {@code PreparedStatement}
- *
- * @author Clinton Begin
+ * @author Ryan Lamore
  */
-public interface ParameterHandler {
+public class ResultMapException extends PersistenceException {
+    private static final long serialVersionUID = 3270932060569707623L;
 
-  Object getParameterObject();
+    public ResultMapException() {
+    }
 
-  void setParameters(PreparedStatement ps)
-      throws SQLException;
+    public ResultMapException(String message) {
+        super(message);
+    }
 
+    public ResultMapException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ResultMapException(Throwable cause) {
+        super(cause);
+    }
 }

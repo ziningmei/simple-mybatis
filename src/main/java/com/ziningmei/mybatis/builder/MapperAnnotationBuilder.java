@@ -1,24 +1,26 @@
-package com.ziningmei.mybatis.builder.annotation;
+package com.ziningmei.mybatis.builder;
 
 import com.ziningmei.mybatis.annotation.Delete;
 import com.ziningmei.mybatis.annotation.Insert;
 import com.ziningmei.mybatis.annotation.Select;
 import com.ziningmei.mybatis.annotation.Update;
 import com.ziningmei.mybatis.binding.MapperMethod;
-import com.ziningmei.mybatis.builder.BuilderException;
-import com.ziningmei.mybatis.builder.IncompleteElementException;
-import com.ziningmei.mybatis.builder.MapperBuilderAssistant;
-import com.ziningmei.mybatis.executor.keygen.KeyGenerator;
-import com.ziningmei.mybatis.executor.keygen.NoKeyGenerator;
-import com.ziningmei.mybatis.mapping.*;
+import com.ziningmei.mybatis.mapping.ResultSetType;
+import com.ziningmei.mybatis.mapping.SqlCommandType;
+import com.ziningmei.mybatis.mapping.SqlSource;
+import com.ziningmei.mybatis.mapping.StatementType;
 import com.ziningmei.mybatis.reflection.TypeParameterResolver;
 import com.ziningmei.mybatis.scripting.LanguageDriver;
 import com.ziningmei.mybatis.scripting.xml.XMLLanguageDriver;
 import com.ziningmei.mybatis.session.Configuration;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * mapper 注解构造器
@@ -89,7 +91,7 @@ public class MapperAnnotationBuilder {
                         parseStatement(method);
                     }
                 } catch (IncompleteElementException e) {
-                    configuration.addIncompleteMethod(new MethodResolver(this, method));
+
                 }
             }
         }
@@ -125,13 +127,6 @@ public class MapperAnnotationBuilder {
             //判断类型是不是select
             boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
 
-            //主键生成器
-            KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
-            //主键属性
-            String keyProperty = null;
-            //主键列
-            String keyColumn = null;
-
             //获得 resultMapId 编号字符串
             String resultMapId = null;
             if (isSelect) {
@@ -139,7 +134,7 @@ public class MapperAnnotationBuilder {
                 resultMapId = parseResultMap(method);
             }
             //添加语句
-            assistant.addMappedStatement(mappedStatementId, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterTypeClass, resultMapId, getReturnType(method), resultSetType, false, keyGenerator, languageDriver);
+            assistant.addMappedStatement(mappedStatementId, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterTypeClass, resultMapId, getReturnType(method), resultSetType, false, languageDriver);
         }
 
     }
@@ -275,14 +270,14 @@ public class MapperAnnotationBuilder {
      * @return
      */
     private Class<?> getReturnType(Method method) {
+        //获取返回值
         Class<?> returnType = method.getReturnType();
+        //获取实际类型
         Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, type);
+        //如果是一个类
         if (resolvedReturnType instanceof Class) {
+            //那么直接赋值
             returnType = (Class<?>) resolvedReturnType;
-            if (returnType.isArray()) {
-                returnType = returnType.getComponentType();
-            }
-
         }
 
         return returnType;

@@ -16,7 +16,7 @@
 package com.ziningmei.mybatis.scripting;
 
 
-import com.ziningmei.mybatis.executor.parameter.ParameterHandler;
+import com.ziningmei.mybatis.executor.ParameterHandler;
 import com.ziningmei.mybatis.mapping.BoundSql;
 import com.ziningmei.mybatis.mapping.MappedStatement;
 import com.ziningmei.mybatis.mapping.SqlSource;
